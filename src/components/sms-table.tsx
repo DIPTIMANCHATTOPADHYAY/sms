@@ -8,13 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCell } from '@/components/message-cell';
 import type { SmsRecord } from '@/lib/types';
@@ -28,82 +21,55 @@ interface SmsTableProps {
 export function SmsTable({ records, isLoading }: SmsTableProps) {
   if (isLoading) {
     return (
-      <Card className="mt-8 shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline">SMS Records</CardTitle>
-          <CardDescription>Loading records...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full space-y-2">
-            <Skeleton className="h-12 w-full rounded-md" />
-            <div className="space-y-1">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-md" />
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (records.length === 0) {
-    return (
-      <Card className="mt-8 text-center shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline">SMS Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="py-12 text-muted-foreground">
-            No records found. Try adjusting your filters or fetch new data.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="w-full space-y-2">
+        <Skeleton className="h-12 w-full rounded-md" />
+        <div className="space-y-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-md" />
+          ))}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="mt-8 shadow-lg">
-      <CardHeader>
-        <CardTitle className="font-headline">SMS Records</CardTitle>
-        <CardDescription>
-          A list of your SMS records based on the filters.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <ScrollArea className="h-[60vh] w-full">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow>
-                  <TableHead className="w-[180px]">Datetime</TableHead>
-                  <TableHead>Sender ID</TableHead>
-                  <TableHead>B-Number</TableHead>
-                  <TableHead>Range</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead className="min-w-[300px]">Message</TableHead>
+    <div className="rounded-md border">
+      <ScrollArea className="w-full whitespace-nowrap" style={{ height: '400px' }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date/Time</TableHead>
+              <TableHead>Sender ID</TableHead>
+              <TableHead>Phone Number</TableHead>
+              <TableHead className="min-w-[300px]">Message</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {records.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  No messages to display. Please validate your API key and set filters.
+                </TableCell>
+              </TableRow>
+            ) : (
+              records.map((record, index) => (
+                <TableRow key={`${record.dateTime}-${index}`}>
+                  <TableCell>{record.dateTime}</TableCell>
+                  <TableCell>{record.senderId}</TableCell>
+                  <TableCell>{record.bNumber}</TableCell>
+                  <TableCell className="whitespace-pre-wrap">
+                    <MessageCell message={record.message} />
+                  </TableCell>
+                  <TableCell>
+                    {/* Placeholder for Status */}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record, index) => (
-                  <TableRow key={`${record.dateTime}-${index}`}>
-                    <TableCell className="font-medium">
-                      {record.dateTime}
-                    </TableCell>
-                    <TableCell>{record.senderId}</TableCell>
-                    <TableCell>{record.bNumber}</TableCell>
-                    <TableCell>{record.range}</TableCell>
-                    <TableCell>{`${record.rate} ${record.currency}`}</TableCell>
-                    <TableCell>
-                      <MessageCell message={record.message} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </div>
-      </CardContent>
-    </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 }
