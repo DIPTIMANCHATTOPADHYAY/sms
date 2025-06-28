@@ -4,11 +4,11 @@ import { z } from 'zod';
 export interface SmsRecord {
   dateTime: string;
   senderId: string;
-  bNumber: string;
+  phone: string;
   mccMnc: string;
   destination: string;
   range: string;
-  rate: string;
+  rate: number | string;
   currency: string;
   message: string;
 }

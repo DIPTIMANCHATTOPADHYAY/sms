@@ -14,39 +14,6 @@ const filterSchema = z.object({
   phone: z.string().optional(),
 });
 
-function parseSmsCsv(csvText: string): SmsRecord[] {
-  const records: SmsRecord[] = [];
-  const lines = csvText.trim().split('\n');
-  
-  if (lines.length < 2) {
-    return []; // No data rows
-  }
-
-  // Datetime;SenderID;B-Number;MCC/MNC;Destination;Range;Rate;Currency;Message
-  const header = lines.shift()!.split(';');
-  const messageIndex = header.indexOf('Message');
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-
-    const parts = line.split(';');
-    // Handle cases where the message itself contains semicolons
-    const message = parts.slice(messageIndex).join(';').replace(/^"|"$/g, '').trim();
-
-    records.push({
-      dateTime: parts[0] || '',
-      senderId: parts[1] || '',
-      bNumber: parts[2] || '',
-      mccMnc: parts[3] || '',
-      destination: parts[4] || '',
-      range: parts[5] || '',
-      rate: parts[6] || '',
-      currency: parts[7] || '',
-      message: message,
-    });
-  }
-  return records;
-}
 
 export async function fetchSmsData(
   filter: FilterFormValues
@@ -93,13 +60,26 @@ export async function fetchSmsData(
       return { error: `API Error: ${response.status} ${response.statusText}. ${errorText}` };
     }
 
-    const csvText = await response.text();
-    if (csvText.includes('"error":')) {
-      const errorJson = JSON.parse(csvText);
-      return { error: `API returned an error: ${errorJson.error.message}` };
+    const jsonResponse = await response.json();
+    
+    if (jsonResponse.error) {
+      return { error: `API returned an error: ${jsonResponse.error.message}` };
     }
     
-    const data = parseSmsCsv(csvText);
+    const rawRecords: any[] = jsonResponse.result?.list || [];
+
+    const data: SmsRecord[] = rawRecords.map(raw => ({
+        dateTime: raw.datetime,
+        senderId: raw.senderid,
+        phone: raw.phone,
+        mccMnc: raw.mcc_mnc,
+        destination: raw.phone_sde_name,
+        range: raw.range_name,
+        rate: raw.dialer_rate,
+        currency: raw.dialer_cur_name,
+        message: raw.message,
+    }));
+    
     return { data };
   } catch (err) {
     const error = err as Error;
