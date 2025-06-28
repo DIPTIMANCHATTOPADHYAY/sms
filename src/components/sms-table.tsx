@@ -34,14 +34,14 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
 
   return (
     <div className="rounded-md border">
-      <ScrollArea className="h-[60vh] w-full">
+      <ScrollArea className="h-[65vh] w-full">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
               <TableRow>
                 <TableHead className="w-[180px]">Datetime</TableHead>
                 <TableHead className="w-[150px]">Sender ID</TableHead>
                 <TableHead className="w-[150px]">Phone</TableHead>
-                <TableHead>Range</TableHead>
+                <TableHead className="hidden lg:table-cell">Range</TableHead>
                 <TableHead className="w-[120px]">Rate</TableHead>
                 <TableHead>Message</TableHead>
               </TableRow>
@@ -59,7 +59,7 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
                     <TableCell className="font-medium whitespace-nowrap">{record.dateTime}</TableCell>
                     <TableCell className="whitespace-nowrap">{record.senderId}</TableCell>
                     <TableCell className="whitespace-nowrap">{record.phone}</TableCell>
-                    <TableCell>{record.range}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{record.range}</TableCell>
                     <TableCell className="whitespace-nowrap">{`${record.rate} ${record.currency}`}</TableCell>
                     <TableCell>
                       <MessageCell message={record.message} />

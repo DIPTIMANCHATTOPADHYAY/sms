@@ -84,7 +84,7 @@ export function UserSettingsForm({ user, emailChangeEnabled }: UserSettingsFormP
             )}
             />
         </div>
-        <CardFooter className="border-t px-6 py-4 -mx-6 -mb-6">
+        <CardFooter className="border-t px-0 py-4 -mx-0 -mb-6">
             <div className="flex justify-end w-full">
                 <Button type="submit" disabled={isLoading}>
                     {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}

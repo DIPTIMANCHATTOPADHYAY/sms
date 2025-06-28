@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, LoaderCircle, ShieldAlert } from 'lucide-react';
+import { User, Settings, LogOut, LoaderCircle, ShieldAlert, Sun, Moon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,8 +95,8 @@ export default function DashboardLayout({
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email || 'My Account'}</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{user.name || user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/settings">
@@ -114,7 +114,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 bg-muted/30">
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
             {children}
         </div>

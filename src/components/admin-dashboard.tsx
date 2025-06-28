@@ -79,9 +79,9 @@ function UserManagementTab() {
                                                 <AvatarImage src={user.photoURL || ''} alt={user.name || 'User'}/>
                                                 <AvatarFallback>{user.name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">{user.name || 'N/A'}</span>
-                                                <span className="text-xs text-muted-foreground sm:hidden">{user.email}</span>
+                                            <div className="font-medium">
+                                              {user.name || 'N/A'}
+                                              <div className="text-xs text-muted-foreground sm:hidden">{user.email}</div>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -309,7 +309,7 @@ export function AdminDashboard() {
     return (
         <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-6 flex justify-between items-center">
+                <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                         <p className="text-muted-foreground">Welcome to the control center.</p>
@@ -322,7 +322,7 @@ export function AdminDashboard() {
                             </Button>
                         </form>
                         <Link href="/dashboard">
-                            <Button variant="outline">Back to Dashboard</Button>
+                            <Button>Back to App</Button>
                         </Link>
                     </div>
                 </div>

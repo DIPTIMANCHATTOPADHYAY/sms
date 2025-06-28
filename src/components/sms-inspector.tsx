@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchSmsData } from '@/app/actions';
 import { SmsTable } from '@/components/sms-table';
 import type { SmsRecord } from '@/lib/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
 const formSchema = z.object({
   startDate: z.date({ required_error: 'A start date is required.'}),
@@ -81,142 +81,124 @@ export function SmsInspector() {
 
   return (
     <div className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>SMS Filters</CardTitle>
-                <CardDescription>Use the filters below to fetch SMS records.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                        control={form.control}
-                        name="startDate"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Start Date</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                    )}
-                                    >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? (
-                                        format(field.value, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="endDate"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>End Date</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                    )}
-                                    >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? (
-                                        format(field.value, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                    </Button>
-                                </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="senderId"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Sender ID</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., Telegram" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., 23674400423" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            {isLoading ? 'Fetching...' : 'Fetch SMS'}
-                        </Button>
-                    </div>
-                    </form>
-                </Form>
-            </CardContent>
-        </Card>
-      
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Received SMS Messages</CardTitle>
-                        <CardDescription>{records.length} messages found</CardDescription>
-                    </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <Card>
+              <CardHeader>
+                  <CardTitle>SMS Filters</CardTitle>
+                  <CardDescription>Use the filters below to fetch SMS records.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <Popover>
+                              <PopoverTrigger asChild>
+                              <FormControl>
+                                  <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                      'w-full justify-start text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                  )}
+                                  >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                  </Button>
+                              </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                              </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <Popover>
+                              <PopoverTrigger asChild>
+                              <FormControl>
+                                  <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                      'w-full justify-start text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                  )}
+                                  >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                  </Button>
+                              </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                              </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="senderId"
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sender ID</FormLabel>
+                          <FormControl>
+                              <Input placeholder="e.g., Telegram" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                              <Input placeholder="e.g., 23674400423" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                    )}
+                  />
                 </div>
-            </CardHeader>
-            <CardContent>
-                <SmsTable records={records} isLoading={isLoading} />
-            </CardContent>
-        </Card>
+              </CardContent>
+              <CardFooter className="flex justify-end">
+                  <Button type="submit" disabled={isLoading}>
+                      {isLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {isLoading ? 'Fetching...' : 'Fetch SMS'}
+                  </Button>
+              </CardFooter>
+          </Card>
+        </form>
+      </Form>
+      
+      <Card>
+          <CardHeader>
+              <div className="flex justify-between items-center">
+                  <div>
+                      <CardTitle>Received SMS Messages</CardTitle>
+                      <CardDescription>{records.length} messages found</CardDescription>
+                  </div>
+              </div>
+          </CardHeader>
+          <CardContent>
+              <SmsTable records={records} isLoading={isLoading} />
+          </CardContent>
+      </Card>
     </div>
   );
 }
