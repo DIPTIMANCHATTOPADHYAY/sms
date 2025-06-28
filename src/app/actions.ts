@@ -18,17 +18,9 @@ const filterSchema = z.object({
 });
 
 async function getApiKey(): Promise<string> {
-  try {
-    await connectDB();
-    const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
-    if (apiKeySetting && apiKeySetting.value) {
-      return apiKeySetting.value;
-    }
-  } catch (error) {
-    console.error("Could not fetch API key from MongoDB.", error);
-  }
-  // Fallback to environment variable if DB fails or key doesn't exist
-  return process.env.PREMIUMY_API_KEY || '';
+  await connectDB();
+  const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
+  return apiKeySetting?.value ?? '';
 }
 
 export async function fetchSmsData(
