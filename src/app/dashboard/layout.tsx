@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { User, Settings, LogOut, LoaderCircle, ShieldAlert } from 'lucide-react';
 import {
@@ -32,26 +33,27 @@ export default function DashboardLayout({
   const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [loading, user, router]);
+
   const handleLogout = async () => {
     await logout();
     refreshUser(); // Update the auth context
     router.push('/login');
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
         <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
-
-  if (!user && !loading) {
-    router.replace('/login');
-    return null;
-  }
   
-  if (user?.status === 'blocked') {
+  if (user.status === 'blocked') {
     return (
         <AlertDialog open={true}>
             <AlertDialogContent>
@@ -79,7 +81,7 @@ export default function DashboardLayout({
             SMS Inspector 2.0
           </Link>
           <div className="flex items-center gap-4">
-            {user?.isAdmin && (
+            {user.isAdmin && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">Admin Panel</Button>
               </Link>
@@ -92,7 +94,7 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user?.email || 'My Account'}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.email || 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem disabled>
                   <Settings className="mr-2 h-4 w-4" />
