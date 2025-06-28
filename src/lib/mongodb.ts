@@ -41,7 +41,11 @@ async function seedDatabase() {
         
         const settingsToSeed = [
             { key: 'apiKey', value: 'oKREnlZLQeSs_ntZ2TAV6A', name: 'Default API Key' },
-            { key: 'ipRestrictions', value: ['40.81.241.64'], name: 'Default IP Restriction' },
+            { 
+              key: 'proxySettings', 
+              value: { ip: '40.81.241.64', port: '3128', username: 'demo', password: 'demo' }, 
+              name: 'Default Proxy Settings' 
+            },
             { key: 'siteName', value: 'SMS Inspector 2.0', name: 'Default Site Name' },
             { key: 'primaryColor', value: '217.2 91.2% 59.8%', name: 'Default Primary Color' },
             { key: 'emailChangeEnabled', value: true, name: 'Default Email Change Policy' },
