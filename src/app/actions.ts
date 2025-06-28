@@ -334,7 +334,7 @@ export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60, // 1 hour
-      path: '/admin',
+      path: '/',
     });
     return { success: true };
   }
@@ -342,6 +342,6 @@ export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
 }
 
 export async function adminLogout() {
-  cookies().set('admin_session', '', { maxAge: -1, path: '/admin' });
+  cookies().set('admin_session', '', { maxAge: -1, path: '/' });
   redirect('/admin/login');
 }
