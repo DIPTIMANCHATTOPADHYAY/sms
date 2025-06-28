@@ -9,6 +9,7 @@ import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
 import type { FilterFormValues, SmsRecord, UserProfile } from '@/lib/types';
 import { extractInfo } from '@/ai/flows/extract-info-from-sms';
+import { redirect } from 'next/navigation';
 
 const filterSchema = z.object({
   startDate: z.date(),
@@ -74,7 +75,6 @@ export async function fetchSmsData(
         return { data: [] };
     }
     
-    // The API might return an error in JSON format
     if (csvText.trim().startsWith('{')) {
         try {
             const jsonError = JSON.parse(csvText);
@@ -82,13 +82,12 @@ export async function fetchSmsData(
                 return { error: `API returned an error: ${jsonError.error.message}` };
             }
         } catch (e) {
-            // Not a JSON error, proceed assuming it's CSV
         }
     }
 
     const lines = csvText.trim().split(/\r?\n/);
     if (lines.length < 2) {
-      return { data: [] }; // No data rows
+      return { data: [] };
     }
 
     const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
@@ -106,7 +105,6 @@ export async function fetchSmsData(
         message: headers.indexOf('message'),
     };
     
-    // Check for essential columns
     if (columnMap.dateTime === -1 || columnMap.message === -1) {
         return { error: "CSV response is missing required columns ('datetime', 'message')." };
     }
@@ -320,4 +318,30 @@ export async function toggleUserStatus(id: string, status: 'active' | 'blocked')
     } catch (error) {
         return { error: (error as Error).message };
     }
+}
+
+// --- Admin Auth Actions ---
+
+const adminLoginSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+
+export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
+  if (values.username === 'admin' && values.password === 'admin') {
+    cookies().set('admin_session', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60, // 1 hour
+      path: '/admin',
+    });
+    return { success: true };
+  }
+  return { error: 'Invalid admin credentials.' };
+}
+
+export async function adminLogout() {
+  cookies().set('admin_session', '', { maxAge: -1, path: '/admin' });
+  redirect('/admin/login');
 }
