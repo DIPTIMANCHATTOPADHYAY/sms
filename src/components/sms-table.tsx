@@ -38,36 +38,22 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
               <TableRow>
-                <TableHead>Date/Time</TableHead>
-                <TableHead>Sender ID</TableHead>
-                <TableHead>Phone Number</TableHead>
-                <TableHead>MCC/MNC</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Range</TableHead>
-                <TableHead>Rate</TableHead>
-                <TableHead>Currency</TableHead>
-                <TableHead className="min-w-[300px]">Message</TableHead>
+                <TableHead className="w-[200px]">App Name</TableHead>
+                <TableHead>Message</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
                     No messages to display. Please validate your API key and set filters.
                   </TableCell>
                 </TableRow>
               ) : (
                 records.map((record, index) => (
                   <TableRow key={`${record.dateTime}-${index}`}>
-                    <TableCell className="whitespace-nowrap">{record.dateTime}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.senderId}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.phone}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.mccMnc}</TableCell>
-                    <TableCell>{record.destination}</TableCell>
-                    <TableCell>{record.range}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.rate}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.currency}</TableCell>
-                    <TableCell className="whitespace-pre-wrap min-w-[300px]">
+                    <TableCell className="font-medium whitespace-nowrap">{record.senderId}</TableCell>
+                    <TableCell>
                       <MessageCell message={record.message} />
                     </TableCell>
                   </TableRow>
