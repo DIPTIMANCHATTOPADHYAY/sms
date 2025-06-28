@@ -69,27 +69,66 @@ export async function fetchSmsData(
       return { error: `API Error: ${response.status} ${response.statusText}. ${errorText}` };
     }
 
-    const jsonResponse = await response.json();
-    
-    if (jsonResponse.error) {
-      return { error: `API returned an error: ${jsonResponse.error.message}` };
+    const csvText = await response.text();
+    if (!csvText || csvText.trim() === '') {
+        return { data: [] };
     }
     
-    const rawRecords: any[] = jsonResponse.result?.list || [];
+    // The API might return an error in JSON format
+    if (csvText.trim().startsWith('{')) {
+        try {
+            const jsonError = JSON.parse(csvText);
+            if (jsonError.error) {
+                return { error: `API returned an error: ${jsonError.error.message}` };
+            }
+        } catch (e) {
+            // Not a JSON error, proceed assuming it's CSV
+        }
+    }
 
-    const data: SmsRecord[] = rawRecords.map(raw => ({
-        dateTime: raw.datetime,
-        senderId: raw.senderid,
-        phone: raw.phone,
-        mccMnc: raw.mcc_mnc,
-        destination: raw.phone_sde_name,
-        range: raw.range_name,
-        rate: raw.dialer_rate,
-        currency: raw.dialer_cur_name,
-        message: raw.message,
-    }));
+    const lines = csvText.trim().split(/\r?\n/);
+    if (lines.length < 2) {
+      return { data: [] }; // No data rows
+    }
+
+    const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
+    const records: SmsRecord[] = [];
+
+    const columnMap: { [key in keyof SmsRecord]?: number } = {
+        dateTime: headers.indexOf('datetime'),
+        senderId: headers.indexOf('senderid'),
+        phone: headers.indexOf('phone'),
+        mccMnc: headers.indexOf('mcc_mnc'),
+        destination: headers.indexOf('phone_sde_name'),
+        range: headers.indexOf('range_name'),
+        rate: headers.indexOf('dialer_rate'),
+        currency: headers.indexOf('dialer_cur_name'),
+        message: headers.indexOf('message'),
+    };
     
-    return { data };
+    // Check for essential columns
+    if (columnMap.dateTime === -1 || columnMap.message === -1) {
+        return { error: "CSV response is missing required columns ('datetime', 'message')." };
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(';');
+        if (values.length >= headers.length) {
+            records.push({
+                dateTime: values[columnMap.dateTime!],
+                senderId: values[columnMap.senderId!],
+                phone: values[columnMap.phone!],
+                mccMnc: values[columnMap.mccMnc!],
+                destination: values[columnMap.destination!],
+                range: values[columnMap.range!],
+                rate: values[columnMap.rate!],
+                currency: values[columnMap.currency!],
+                message: values[columnMap.message!],
+            });
+        }
+    }
+    
+    return { data: records };
   } catch (err) {
     const error = err as Error;
     console.error('Failed to fetch SMS data:', error);
