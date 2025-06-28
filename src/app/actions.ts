@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { formatISO } from 'date-fns';
+import { format } from 'date-fns';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -44,8 +44,8 @@ export async function fetchSmsData(
     method: 'sms.mdr_full:get_list',
     params: {
       filter: {
-        start_date: formatISO(filter.startDate!, { representation: 'date' }) + ' 00:00:00',
-        end_date: formatISO(filter.endDate!, { representation: 'date' }) + ' 23:59:59',
+        start_date: format(filter.startDate!, 'yyyy-MM-dd 00:00:00'),
+        end_date: format(filter.endDate!, 'yyyy-MM-dd 23:59:59'),
         senderid: filter.senderId,
         phone: filter.phone,
       },
@@ -97,12 +97,12 @@ export async function fetchSmsData(
     const columnMap: { [key in keyof SmsRecord]?: number } = {
         dateTime: headers.indexOf('datetime'),
         senderId: headers.indexOf('senderid'),
-        phone: headers.indexOf('phone'),
-        mccMnc: headers.indexOf('mcc_mnc'),
-        destination: headers.indexOf('phone_sde_name'),
-        range: headers.indexOf('range_name'),
-        rate: headers.indexOf('dialer_rate'),
-        currency: headers.indexOf('dialer_cur_name'),
+        phone: headers.indexOf('b-number'),
+        mccMnc: headers.indexOf('mcc/mnc'),
+        destination: headers.indexOf('destination'),
+        range: headers.indexOf('range'),
+        rate: headers.indexOf('rate'),
+        currency: headers.indexOf('currency'),
         message: headers.indexOf('message'),
     };
     
@@ -114,6 +114,10 @@ export async function fetchSmsData(
     for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(';');
         if (values.length >= headers.length) {
+            let message = values[columnMap.message!];
+            if (message && message.startsWith('"') && message.endsWith('"')) {
+              message = message.substring(1, message.length - 1);
+            }
             records.push({
                 dateTime: values[columnMap.dateTime!],
                 senderId: values[columnMap.senderId!],
@@ -123,7 +127,7 @@ export async function fetchSmsData(
                 range: values[columnMap.range!],
                 rate: values[columnMap.rate!],
                 currency: values[columnMap.currency!],
-                message: values[columnMap.message!],
+                message: message,
             });
         }
     }
