@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { CalendarIcon, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -45,8 +45,8 @@ export function SmsInspector() {
     const now = new Date();
     form.reset({
       ...form.getValues(),
-      startDate: now,
-      endDate: now,
+      startDate: startOfDay(now),
+      endDate: endOfDay(now),
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -107,12 +107,17 @@ export function SmsInspector() {
                                   )}
                                   >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {field.value ? format(field.value, 'PPP HH:mm') : <span>Pick a date</span>}
+                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                                   </Button>
                               </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                              <Calendar 
+                                mode="single" 
+                                selected={field.value} 
+                                onSelect={(date) => field.onChange(date ? startOfDay(date) : undefined)} 
+                                initialFocus 
+                              />
                               </PopoverContent>
                           </Popover>
                           <FormMessage />
@@ -136,12 +141,17 @@ export function SmsInspector() {
                                   )}
                                   >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {field.value ? format(field.value, 'PPP HH:mm') : <span>Pick a date</span>}
+                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                                   </Button>
                               </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                <Calendar 
+                                  mode="single" 
+                                  selected={field.value} 
+                                  onSelect={(date) => field.onChange(date ? endOfDay(date) : undefined)} 
+                                  initialFocus 
+                                />
                               </PopoverContent>
                           </Popover>
                           <FormMessage />
