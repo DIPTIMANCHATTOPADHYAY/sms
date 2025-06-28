@@ -79,8 +79,6 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
                   <TableHead className="w-[180px]">Datetime</TableHead>
                   <TableHead>Sender ID</TableHead>
                   <TableHead>B-Number</TableHead>
-                  <TableHead>MCC/MNC</TableHead>
-                  <TableHead>Destination</TableHead>
                   <TableHead>Range</TableHead>
                   <TableHead>Rate</TableHead>
                   <TableHead className="min-w-[300px]">Message</TableHead>
@@ -94,8 +92,6 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
                     </TableCell>
                     <TableCell>{record.senderId}</TableCell>
                     <TableCell>{record.bNumber}</TableCell>
-                    <TableCell>{record.mccMnc}</TableCell>
-                    <TableCell>{record.destination}</TableCell>
                     <TableCell>{record.range}</TableCell>
                     <TableCell>{`${record.rate} ${record.currency}`}</TableCell>
                     <TableCell>
