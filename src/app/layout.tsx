@@ -37,8 +37,8 @@ export default async function RootLayout({
             <AuthProvider>
             {children}
             </AuthProvider>
-            <Toaster />
         </SettingsProvider>
+        <Toaster />
       </body>
     </html>
   );
