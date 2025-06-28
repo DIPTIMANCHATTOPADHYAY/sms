@@ -1,6 +1,14 @@
 'use client';
 
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -10,7 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCell } from '@/components/message-cell';
 import type { SmsRecord } from '@/lib/types';
-import { ScrollArea } from './ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SmsTableProps {
   records: SmsRecord[];
@@ -22,54 +30,24 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
     return (
       <Card className="mt-8 shadow-lg">
         <CardHeader>
-          <CardTitle className="font-headline">SMS Conversations</CardTitle>
-          <CardDescription>Loading conversations...</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Card key={i} className="shadow-sm border">
-              <CardHeader>
-                <Skeleton className="h-6 w-1/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const groupedRecords = records.reduce((acc, record) => {
-    const key = record.bNumber || 'Unknown Number';
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(record);
-    return acc;
-  }, {} as Record<string, SmsRecord[]>);
-
-  const phoneNumbers = Object.keys(groupedRecords);
-
-  if (records.length > 0 && phoneNumbers.length === 0) {
-    return (
-      <Card className="mt-8 text-center shadow-lg">
-        <CardHeader>
           <CardTitle className="font-headline">SMS Records</CardTitle>
+          <CardDescription>Loading records...</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="py-12 text-muted-foreground">
-            Could not group messages by phone number.
-          </p>
+          <div className="w-full space-y-2">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <div className="space-y-1">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-md" />
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (phoneNumbers.length === 0) {
+  if (records.length === 0) {
     return (
       <Card className="mt-8 text-center shadow-lg">
         <CardHeader>
@@ -87,49 +65,44 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
   return (
     <Card className="mt-8 shadow-lg">
       <CardHeader>
-        <CardTitle className="font-headline">SMS Conversations</CardTitle>
+        <CardTitle className="font-headline">SMS Records</CardTitle>
         <CardDescription>
-          Messages are grouped by phone number and sorted chronologically.
+          A list of your SMS records based on the filters.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
-        {phoneNumbers.map((bNumber) => {
-          const messages = groupedRecords[bNumber].sort(
-            (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
-          );
-          const firstMessage = messages[0];
-          if (!firstMessage) return null;
-
-          return (
-            <Card key={bNumber} className="shadow-sm border">
-              <CardHeader>
-                <CardTitle className="text-xl font-headline">
-                  {firstMessage.senderId}
-                </CardTitle>
-                <CardDescription>To: {bNumber}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-72 w-full pr-4">
-                  <div className="space-y-4">
-                    {messages.map((record, index) => (
-                      <div
-                        key={`${record.dateTime}-${index}`}
-                        className="flex flex-col gap-1"
-                      >
-                        <div className="rounded-lg bg-muted/50 p-3 shadow-sm">
-                          <MessageCell message={record.message} />
-                        </div>
-                        <p className="text-xs text-muted-foreground self-end">
-                          {record.dateTime}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <CardContent>
+        <div className="rounded-md border">
+          <ScrollArea className="h-[60vh] w-full">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
+                <TableRow>
+                  <TableHead className="w-[180px]">Datetime</TableHead>
+                  <TableHead>Sender ID</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Range</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead className="min-w-[300px]">Message</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {records.map((record, index) => (
+                  <TableRow key={`${record.dateTime}-${index}`}>
+                    <TableCell className="font-medium">
+                      {record.dateTime}
+                    </TableCell>
+                    <TableCell>{record.senderId}</TableCell>
+                    <TableCell>{record.bNumber}</TableCell>
+                    <TableCell>{record.destination}</TableCell>
+                    <TableCell>{`${record.rate} ${record.currency}`}</TableCell>
+                    <TableCell>
+                      <MessageCell message={record.message} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
