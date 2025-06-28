@@ -35,8 +35,8 @@ export function SmsInspector() {
     defaultValues: {
       startDate: undefined,
       endDate: undefined,
-      senderId: 'Telegram',
-      phone: '23674400423',
+      senderId: '',
+      phone: '',
     },
   });
 
@@ -107,7 +107,7 @@ export function SmsInspector() {
                                   )}
                                   >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                  {field.value ? format(field.value, 'PPP HH:mm') : <span>Pick a date</span>}
                                   </Button>
                               </FormControl>
                               </PopoverTrigger>
@@ -136,7 +136,7 @@ export function SmsInspector() {
                                   )}
                                   >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                  {field.value ? format(field.value, 'PPP HH:mm') : <span>Pick a date</span>}
                                   </Button>
                               </FormControl>
                               </PopoverTrigger>
