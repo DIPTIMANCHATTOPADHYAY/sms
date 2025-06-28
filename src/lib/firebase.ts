@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,9 +12,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let isFirebaseConfigured = false;
 
-export { app, auth, db };
+// We wrap the initialization in a try-catch to prevent the app from crashing
+// if the Firebase credentials are not configured correctly.
+if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_')) {
+    try {
+        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        auth = getAuth(app);
+        db = getFirestore(app);
+        isFirebaseConfigured = true;
+    } catch (error) {
+        console.error("Firebase initialization error. Please check your .env file credentials.", error);
+        isFirebaseConfigured = false;
+    }
+}
+
+
+export { app, auth, db, isFirebaseConfigured };

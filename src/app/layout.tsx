@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/contexts/auth-context';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,7 +14,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isFirebaseConfigured = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !process.env.NEXT_PUBLIC_FIREBASE_API_KEY.includes('YOUR_');
   
   if (!isFirebaseConfigured) {
     return (
@@ -24,7 +24,7 @@ export default function RootLayout({
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-destructive mb-4">Firebase Not Configured</h1>
                     <p className="text-muted-foreground mb-2">
-                    Your application is missing Firebase credentials.
+                    Your application is missing Firebase credentials or they are incorrect.
                     </p>
                     <p className="text-muted-foreground mb-6">
                     Please create a Firebase project, enable authentication, and add the web app configuration to your <strong>.env</strong> file.
