@@ -10,9 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { signup } from '@/app/actions';
 
 
 const formSchema = z.object({
@@ -37,32 +35,17 @@ export function SignupForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      // Update Firebase auth profile
-      await updateProfile(user, { displayName: values.name });
-
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: values.name,
-        photoURL: user.photoURL,
-        status: 'active',
-        isAdmin: false, // Default to not admin
-      });
-      
+    const result = await signup(values);
+    setIsLoading(false);
+    
+    if (result.error) {
+      toast({ variant: 'destructive', title: 'Sign Up Failed', description: result.error });
+    } else if (result.success) {
       toast({
         title: 'Account Created',
         description: 'You can now log in with your credentials.',
       });
       router.push('/login');
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Sign Up Failed', description: error.message });
-    } finally {
-      setIsLoading(false);
     }
   }
 

@@ -38,7 +38,7 @@ function UserManagementTab() {
 
     const handleToggleStatus = async (user: UserProfile) => {
         const newStatus = user.status === 'active' ? 'blocked' : 'active';
-        const result = await toggleUserStatus(user.uid, newStatus);
+        const result = await toggleUserStatus(user.id, newStatus);
         if (result.error) {
             toast({ variant: 'destructive', title: 'Update failed', description: result.error });
         } else {
@@ -70,14 +70,14 @@ function UserManagementTab() {
                     </TableHeader>
                     <TableBody>
                         {users.map((user) => (
-                            <TableRow key={user.uid}>
+                            <TableRow key={user.id}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <Avatar>
-                                            <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'}/>
-                                            <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={user.photoURL || ''} alt={user.name || 'User'}/>
+                                            <AvatarFallback>{user.name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <span className="font-medium">{user.displayName || 'N/A'}</span>
+                                        <span className="font-medium">{user.name || 'N/A'}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>{user.email}</TableCell>
@@ -120,7 +120,7 @@ function SettingsTab() {
             setIsLoading(false);
         }
         loadSettings();
-    }, []);
+    }, [toast]);
 
     const handleSave = async () => {
         setIsLoading(true);

@@ -13,8 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
+import { logout } from '@/app/actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +29,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, userProfile } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
+    refreshUser(); // Update the auth context
     router.push('/login');
   };
 
@@ -51,7 +51,7 @@ export default function DashboardLayout({
     return null;
   }
   
-  if (userProfile?.status === 'blocked') {
+  if (user?.status === 'blocked') {
     return (
         <AlertDialog open={true}>
             <AlertDialogContent>
@@ -79,7 +79,7 @@ export default function DashboardLayout({
             SMS Inspector 2.0
           </Link>
           <div className="flex items-center gap-4">
-            {userProfile?.isAdmin && (
+            {user?.isAdmin && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">Admin Panel</Button>
               </Link>
