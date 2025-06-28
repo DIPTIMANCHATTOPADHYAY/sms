@@ -281,10 +281,23 @@ export async function updateUserProfile(userId: string, values: z.infer<typeof u
         }
 
         await connectDB();
+        const user = await User.findById(userId);
+        if (!user) {
+            return { error: 'User not found.' };
+        }
+
+        const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
+        const emailChangeEnabled = emailChangeEnabledSetting?.value ?? true;
+
+        if (user.email !== values.email && !emailChangeEnabled) {
+            return { error: 'Email address cannot be changed at this time.' };
+        }
         
-        const existingUserWithEmail = await User.findOne({ email: values.email, _id: { $ne: userId } });
-        if (existingUserWithEmail) {
-            return { error: 'This email is already in use by another account.' };
+        if (user.email !== values.email) {
+            const existingUserWithEmail = await User.findOne({ email: values.email, _id: { $ne: userId } });
+            if (existingUserWithEmail) {
+                return { error: 'This email is already in use by another account.' };
+            }
         }
 
         const updatedUser = await User.findByIdAndUpdate(userId, { name: values.name, email: values.email }, { new: true });
@@ -316,6 +329,32 @@ export async function updateUserProfile(userId: string, values: z.infer<typeof u
 }
 
 
+// --- Public Site Settings ---
+export async function getPublicSettings() {
+    try {
+        await connectDB();
+        const siteNameSetting = await Setting.findOne({ key: 'siteName' });
+        const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
+        const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
+        const signupEnabledSetting = await Setting.findOne({ key: 'signupEnabled' });
+        
+        return {
+            siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
+            primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
+            emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
+            signupEnabled: signupEnabledSetting?.value ?? true,
+        }
+    } catch (error) {
+        return { 
+            siteName: 'SMS Inspector 2.0',
+            primaryColor: '217.2 91.2% 59.8%',
+            emailChangeEnabled: true,
+            signupEnabled: true,
+        };
+    }
+}
+
+
 // --- Admin Actions ---
 export async function getAdminSettings() {
     try {
@@ -323,42 +362,80 @@ export async function getAdminSettings() {
         const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
         const ipSetting = await Setting.findOne({ key: 'ipRestrictions' });
         const signupSetting = await Setting.findOne({ key: 'signupEnabled' });
+        const siteNameSetting = await Setting.findOne({ key: 'siteName' });
+        const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
+        const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
         
         return {
             apiKey: apiKeySetting ? apiKeySetting.value : '',
             ipRestrictions: ipSetting && Array.isArray(ipSetting.value) ? ipSetting.value.join(', ') : '',
             signupEnabled: signupSetting?.value ?? true,
+            siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
+            primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
+            emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
         }
     } catch (error) {
         return { error: (error as Error).message };
     }
 }
 
-export async function updateAdminSettings(settings: { apiKey?: string; ipRestrictions?: string, signupEnabled?: boolean }) {
+export async function updateAdminSettings(settings: { 
+    apiKey?: string; 
+    ipRestrictions?: string; 
+    signupEnabled?: boolean;
+    siteName?: string;
+    primaryColor?: string;
+    emailChangeEnabled?: boolean;
+}) {
     try {
         await connectDB();
+        const operations = [];
+
         if (settings.apiKey !== undefined) {
-             await Setting.findOneAndUpdate(
+             operations.push(Setting.findOneAndUpdate(
                 { key: 'apiKey' },
                 { value: settings.apiKey },
                 { upsert: true, new: true }
-            );
+            ));
         }
         if (settings.ipRestrictions !== undefined) {
             const ips = settings.ipRestrictions.split(',').map(ip => ip.trim()).filter(Boolean);
-            await Setting.findOneAndUpdate(
+            operations.push(Setting.findOneAndUpdate(
                 { key: 'ipRestrictions' },
                 { value: ips },
                 { upsert: true, new: true }
-            );
+            ));
         }
         if (settings.signupEnabled !== undefined) {
-            await Setting.findOneAndUpdate(
+            operations.push(Setting.findOneAndUpdate(
                 { key: 'signupEnabled' },
                 { value: settings.signupEnabled },
                 { upsert: true, new: true }
-            );
+            ));
         }
+        if (settings.siteName !== undefined) {
+            operations.push(Setting.findOneAndUpdate(
+                { key: 'siteName' },
+                { value: settings.siteName },
+                { upsert: true, new: true }
+            ));
+        }
+        if (settings.primaryColor !== undefined) {
+            operations.push(Setting.findOneAndUpdate(
+                { key: 'primaryColor' },
+                { value: settings.primaryColor },
+                { upsert: true, new: true }
+            ));
+        }
+        if (settings.emailChangeEnabled !== undefined) {
+            operations.push(Setting.findOneAndUpdate(
+                { key: 'emailChangeEnabled' },
+                { value: settings.emailChangeEnabled },
+                { upsert: true, new: true }
+            ));
+        }
+
+        await Promise.all(operations);
         return { success: true };
     } catch (error) {
         return { error: (error as Error).message };

@@ -107,6 +107,9 @@ function SettingsTab() {
     const [apiKey, setApiKey] = useState('');
     const [ipRestrictions, setIpRestrictions] = useState('');
     const [signupEnabled, setSignupEnabled] = useState(true);
+    const [siteName, setSiteName] = useState('');
+    const [primaryColor, setPrimaryColor] = useState('');
+    const [emailChangeEnabled, setEmailChangeEnabled] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     
     useEffect(() => {
@@ -119,6 +122,9 @@ function SettingsTab() {
                 setApiKey(result.apiKey || '');
                 setIpRestrictions(result.ipRestrictions || '');
                 setSignupEnabled(result.signupEnabled);
+                setSiteName(result.siteName || '');
+                setPrimaryColor(result.primaryColor || '');
+                setEmailChangeEnabled(result.emailChangeEnabled);
             }
             setIsLoading(false);
         }
@@ -127,11 +133,20 @@ function SettingsTab() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        const result = await updateAdminSettings({ apiKey, ipRestrictions, signupEnabled });
+        const result = await updateAdminSettings({ 
+            apiKey, 
+            ipRestrictions, 
+            signupEnabled,
+            siteName,
+            primaryColor,
+            emailChangeEnabled,
+        });
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
         } else {
             toast({ title: 'Settings Saved', description: 'Your changes have been saved successfully.' });
+            // Optionally, refresh the page to see color/name changes immediately
+            window.location.reload();
         }
         setIsLoading(false);
     };
@@ -140,10 +155,33 @@ function SettingsTab() {
         <Card>
             <CardHeader>
                 <CardTitle>Application Settings</CardTitle>
-                <CardDescription>Manage API keys and security settings.</CardDescription>
+                <CardDescription>Manage general site configuration and appearance.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-2">
+                    <Label htmlFor="site-name">Site Name</Label>
+                    <Input
+                        id="site-name"
+                        placeholder="Your App Name"
+                        value={siteName}
+                        onChange={(e) => setSiteName(e.target.value)}
+                        disabled={isLoading}
+                    />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="primary-color">Primary Color (HSL)</Label>
+                    <Input
+                        id="primary-color"
+                        placeholder="e.g., 217.2 91.2% 59.8%"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        disabled={isLoading}
+                    />
+                     <p className="text-sm text-muted-foreground">
+                        Set the primary theme color using HSL format (e.g., `217.2 91.2% 59.8%`).
+                    </p>
+                </div>
+                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                         <Label htmlFor="signup-enabled" className="cursor-pointer">Allow User Signups</Label>
                         <p className="text-sm text-muted-foreground">
@@ -156,6 +194,21 @@ function SettingsTab() {
                         onCheckedChange={setSignupEnabled}
                         disabled={isLoading}
                         aria-label="Toggle user signups"
+                    />
+                </div>
+                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="email-change-enabled" className="cursor-pointer">Allow Users to Change Email</Label>
+                        <p className="text-sm text-muted-foreground">
+                           If disabled, users cannot update their email address from settings.
+                        </p>
+                    </div>
+                    <Switch
+                        id="email-change-enabled"
+                        checked={emailChangeEnabled}
+                        onCheckedChange={setEmailChangeEnabled}
+                        disabled={isLoading}
+                        aria-label="Toggle email change ability"
                     />
                 </div>
                 <div className="space-y-2">

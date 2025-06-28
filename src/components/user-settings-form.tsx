@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
@@ -21,9 +21,10 @@ const formSchema = z.object({
 
 interface UserSettingsFormProps {
   user: UserProfile;
+  emailChangeEnabled: boolean;
 }
 
-export function UserSettingsForm({ user }: UserSettingsFormProps) {
+export function UserSettingsForm({ user, emailChangeEnabled }: UserSettingsFormProps) {
   const { toast } = useToast();
   const { refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -73,8 +74,11 @@ export function UserSettingsForm({ user }: UserSettingsFormProps) {
                 <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                    <Input placeholder="your@email.com" {...field} />
+                    <Input placeholder="your@email.com" {...field} disabled={!emailChangeEnabled} />
                 </FormControl>
+                 <FormDescription>
+                    {!emailChangeEnabled && "Changing your email address has been disabled by an administrator."}
+                </FormDescription>
                 <FormMessage />
                 </FormItem>
             )}

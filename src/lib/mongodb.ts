@@ -38,19 +38,22 @@ async function seedDatabase() {
             });
             console.log('Default admin user created.');
         }
-
-        // Seed Default API Key
-        const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
-        if (!apiKeySetting) {
-            await Setting.create({ key: 'apiKey', value: 'oKREnlZLQeSs_ntZ2TAV6A' });
-            console.log('Default API key has been set.');
-        }
         
-        // Seed Default IP Restriction
-        const ipSetting = await Setting.findOne({ key: 'ipRestrictions' });
-        if (!ipSetting) {
-            await Setting.create({ key: 'ipRestrictions', value: ['40.81.241.64'] });
-            console.log('Default IP restriction has been set.');
+        const settingsToSeed = [
+            { key: 'apiKey', value: 'oKREnlZLQeSs_ntZ2TAV6A', name: 'Default API Key' },
+            { key: 'ipRestrictions', value: ['40.81.241.64'], name: 'Default IP Restriction' },
+            { key: 'siteName', value: 'SMS Inspector 2.0', name: 'Default Site Name' },
+            { key: 'primaryColor', value: '217.2 91.2% 59.8%', name: 'Default Primary Color' },
+            { key: 'emailChangeEnabled', value: true, name: 'Default Email Change Policy' },
+            { key: 'signupEnabled', value: true, name: 'Default Signup Policy' }
+        ];
+
+        for (const setting of settingsToSeed) {
+            const settingExists = await Setting.findOne({ key: setting.key });
+            if (!settingExists) {
+                await Setting.create({ key: setting.key, value: setting.value });
+                console.log(`${setting.name} has been set.`);
+            }
         }
     } catch (error) {
         console.error('Error during database seeding:', error);

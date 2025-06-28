@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/app/actions";
+import { getPublicSettings, getCurrentUser } from "@/app/actions";
 import { UserSettingsForm } from "@/components/user-settings-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { redirect } from "next/navigation";
@@ -9,6 +9,8 @@ export default async function SettingsPage() {
     if (!user) {
         redirect('/login');
     }
+
+    const { emailChangeEnabled } = await getPublicSettings();
 
     return (
         <div className="space-y-6 max-w-3xl mx-auto">
@@ -26,7 +28,7 @@ export default async function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <UserSettingsForm user={user} />
+                   <UserSettingsForm user={user} emailChangeEnabled={emailChangeEnabled} />
                 </CardContent>
             </Card>
         </div>

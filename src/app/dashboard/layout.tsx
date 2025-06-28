@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useSettings } from '@/contexts/settings-provider';
 
 export default function DashboardLayout({
   children,
@@ -31,6 +32,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, loading, refreshUser } = useAuth();
+  const { siteName } = useSettings();
   const router = useRouter();
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function DashboardLayout({
       <header className="sticky top-0 z-40 w-full border-b bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between p-4 sm:p-6 lg:p-8">
           <Link href="/dashboard" className="font-headline text-xl font-bold text-primary">
-            SMS Inspector 2.0
+            {siteName}
           </Link>
           <div className="flex items-center gap-4">
             {user.isAdmin && (
