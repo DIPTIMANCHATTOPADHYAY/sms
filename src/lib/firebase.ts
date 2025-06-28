@@ -15,24 +15,28 @@ const firebaseConfig = {
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
+let isFirebaseConfigured = false;
 
-// We check if the config values are populated and are not the placeholder/test values.
-const hasValidCredentials = 
+// Check if the config values are populated and are not the placeholder/test values.
+const hasValidLookingCredentials = 
     firebaseConfig.apiKey && 
-    !firebaseConfig.apiKey.includes('YOUR_') &&
-    !firebaseConfig.apiKey.includes('TEST_KEY');
+    !firebaseConfig.apiKey.includes('YOUR_API_KEY') &&
+    firebaseConfig.projectId &&
+    !firebaseConfig.projectId.includes('YOUR_PROJECT_ID');
 
-if (hasValidCredentials) {
+if (hasValidLookingCredentials) {
     try {
-        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
+        isFirebaseConfigured = true;
     } catch (error) {
-        console.error("Firebase initialization error. Please check your .env file credentials.", error);
+        console.error("Firebase initialization failed. This is likely due to invalid credentials in .env. The app will run in a degraded mode.");
+        app = undefined;
+        auth = undefined;
+        db = undefined;
+        isFirebaseConfigured = false;
     }
 }
 
-// We export a boolean to easily check if Firebase is configured.
-export const isFirebaseConfigured = !!(app && auth && db);
-
-export { app, auth, db };
+export { app, auth, db, isFirebaseConfigured };
