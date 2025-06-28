@@ -38,21 +38,29 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
               <TableRow>
-                <TableHead className="w-[200px]">App Name</TableHead>
+                <TableHead className="w-[180px]">Datetime</TableHead>
+                <TableHead className="w-[150px]">Sender ID</TableHead>
+                <TableHead className="w-[150px]">Phone</TableHead>
+                <TableHead>Range</TableHead>
+                <TableHead className="w-[120px]">Rate</TableHead>
                 <TableHead>Message</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     No messages to display. Please validate your API key and set filters.
                   </TableCell>
                 </TableRow>
               ) : (
                 records.map((record, index) => (
                   <TableRow key={`${record.dateTime}-${index}`}>
-                    <TableCell className="font-medium whitespace-nowrap">{record.senderId}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">{record.dateTime}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.senderId}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.phone}</TableCell>
+                    <TableCell>{record.range}</TableCell>
+                    <TableCell className="whitespace-nowrap">{`${record.rate} ${record.currency}`}</TableCell>
                     <TableCell>
                       <MessageCell message={record.message} />
                     </TableCell>
