@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { formatISO } from 'date-fns';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, isFirebaseConfigured } from '@/lib/firebase';
 import type { FilterFormValues, SmsRecord, UserProfile } from '@/lib/types';
 import { extractInfo } from '@/ai/flows/extract-info-from-sms';
 
@@ -15,6 +15,10 @@ const filterSchema = z.object({
 });
 
 async function getApiKey(): Promise<string> {
+    if (!isFirebaseConfigured || !db) {
+        console.warn("Firestore not configured, falling back to environment variable for API key.");
+        return process.env.PREMIUMY_API_KEY || '';
+    }
     try {
         const settingsRef = doc(db, 'settings', 'api');
         const docSnap = await getDoc(settingsRef);
@@ -116,6 +120,9 @@ export async function analyzeMessage(message: string) {
 
 // Admin Actions
 export async function getAdminSettings() {
+    if (!isFirebaseConfigured || !db) {
+        return { error: "Firebase is not configured. Please check your .env file." };
+    }
     try {
         const apiDoc = await getDoc(doc(db, 'settings', 'api'));
         const ipDoc = await getDoc(doc(db, 'settings', 'ip'));
@@ -130,6 +137,9 @@ export async function getAdminSettings() {
 }
 
 export async function updateAdminSettings(settings: { apiKey?: string; ipRestrictions?: string }) {
+    if (!isFirebaseConfigured || !db) {
+        return { error: "Firebase is not configured. Please check your .env file." };
+    }
     try {
         if (settings.apiKey !== undefined) {
             await setDoc(doc(db, 'settings', 'api'), { key: settings.apiKey });
@@ -146,6 +156,9 @@ export async function updateAdminSettings(settings: { apiKey?: string; ipRestric
 }
 
 export async function getAllUsers(): Promise<{ users?: Omit<UserProfile, 'providerId' | 'uid'>[], error?: string }> {
+    if (!isFirebaseConfigured || !db) {
+        return { error: "Firebase is not configured. Please check your .env file." };
+    }
     try {
         const usersRef = collection(db, 'users');
         const querySnapshot = await getDocs(usersRef);
@@ -159,6 +172,9 @@ export async function getAllUsers(): Promise<{ users?: Omit<UserProfile, 'provid
 
 
 export async function toggleUserStatus(uid: string, status: 'active' | 'blocked') {
+    if (!isFirebaseConfigured || !db) {
+        return { error: "Firebase is not configured. Please check your .env file." };
+    }
     try {
         const userRef = doc(db, 'users', uid);
         await setDoc(userRef, { status }, { merge: true });
