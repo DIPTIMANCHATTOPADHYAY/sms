@@ -8,10 +8,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, ShieldBan, ShieldCheck, LogOut } from 'lucide-react';
 import { getAdminSettings, updateAdminSettings, getAllUsers, toggleUserStatus, adminLogout } from '@/app/actions';
-import type { UserProfile } from '@/lib/types';
+import type { UserProfile, ProxySettings } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -105,7 +104,7 @@ function UserManagementTab() {
 function SettingsTab() {
     const { toast } = useToast();
     const [apiKey, setApiKey] = useState('');
-    const [ipRestrictions, setIpRestrictions] = useState('');
+    const [proxySettings, setProxySettings] = useState<ProxySettings>({ ip: '', port: '', username: '', password: '' });
     const [signupEnabled, setSignupEnabled] = useState(true);
     const [siteName, setSiteName] = useState('');
     const [primaryColor, setPrimaryColor] = useState('');
@@ -120,7 +119,7 @@ function SettingsTab() {
                  toast({ variant: 'destructive', title: 'Error fetching settings', description: result.error });
             } else {
                 setApiKey(result.apiKey || '');
-                setIpRestrictions(result.ipRestrictions || '');
+                setProxySettings(result.proxySettings || { ip: '', port: '', username: '', password: '' });
                 setSignupEnabled(result.signupEnabled);
                 setSiteName(result.siteName || '');
                 setPrimaryColor(result.primaryColor || '');
@@ -135,7 +134,7 @@ function SettingsTab() {
         setIsLoading(true);
         const result = await updateAdminSettings({ 
             apiKey, 
-            ipRestrictions, 
+            proxySettings, 
             signupEnabled,
             siteName,
             primaryColor,
@@ -152,97 +151,150 @@ function SettingsTab() {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Application Settings</CardTitle>
-                <CardDescription>Manage general site configuration and appearance.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="space-y-2">
-                    <Label htmlFor="site-name">Site Name</Label>
-                    <Input
-                        id="site-name"
-                        placeholder="Your App Name"
-                        value={siteName}
-                        onChange={(e) => setSiteName(e.target.value)}
-                        disabled={isLoading}
-                    />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="primary-color">Primary Color (HSL)</Label>
-                    <Input
-                        id="primary-color"
-                        placeholder="e.g., 217.2 91.2% 59.8%"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        disabled={isLoading}
-                    />
-                     <p className="text-sm text-muted-foreground">
-                        Set the primary theme color using HSL format (e.g., `217.2 91.2% 59.8%`).
-                    </p>
-                </div>
-                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="signup-enabled" className="cursor-pointer">Allow User Signups</Label>
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Appearance & Branding</CardTitle>
+                    <CardDescription>Customize the look and feel of your application.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="site-name">Site Name</Label>
+                        <Input
+                            id="site-name"
+                            placeholder="Your App Name"
+                            value={siteName}
+                            onChange={(e) => setSiteName(e.target.value)}
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="primary-color">Primary Color (HSL)</Label>
+                        <Input
+                            id="primary-color"
+                            placeholder="e.g., 217.2 91.2% 59.8%"
+                            value={primaryColor}
+                            onChange={(e) => setPrimaryColor(e.target.value)}
+                            disabled={isLoading}
+                        />
                         <p className="text-sm text-muted-foreground">
-                            Enable or disable new user registration.
+                            Set the primary theme color using HSL format (e.g., `217.2 91.2% 59.8%`).
                         </p>
                     </div>
-                    <Switch
-                        id="signup-enabled"
-                        checked={signupEnabled}
-                        onCheckedChange={setSignupEnabled}
-                        disabled={isLoading}
-                        aria-label="Toggle user signups"
-                    />
-                </div>
-                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="email-change-enabled" className="cursor-pointer">Allow Users to Change Email</Label>
-                        <p className="text-sm text-muted-foreground">
-                           If disabled, users cannot update their email address from settings.
-                        </p>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>User & Access Policies</CardTitle>
+                    <CardDescription>Manage how users sign up and what they can change.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="signup-enabled" className="cursor-pointer">Allow User Signups</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Enable or disable new user registration.
+                            </p>
+                        </div>
+                        <Switch
+                            id="signup-enabled"
+                            checked={signupEnabled}
+                            onCheckedChange={setSignupEnabled}
+                            disabled={isLoading}
+                            aria-label="Toggle user signups"
+                        />
                     </div>
-                    <Switch
-                        id="email-change-enabled"
-                        checked={emailChangeEnabled}
-                        onCheckedChange={setEmailChangeEnabled}
-                        disabled={isLoading}
-                        aria-label="Toggle email change ability"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="api-key">Premiumy API Key</Label>
-                    <Input
-                        id="api-key"
-                        type="password"
-                        placeholder="Enter your API key"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        disabled={isLoading}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="ip-restrictions">IP Restrictions</Label>
-                     <Textarea
-                        id="ip-restrictions"
-                        placeholder="Enter comma-separated IP addresses"
-                        value={ipRestrictions}
-                        onChange={(e) => setIpRestrictions(e.target.value)}
-                        disabled={isLoading}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                        Allow access only from these comma-separated IP addresses. Leave blank to allow all.
-                    </p>
-                </div>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4 flex justify-end">
-                <Button onClick={handleSave} disabled={isLoading}>
+                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="email-change-enabled" className="cursor-pointer">Allow Users to Change Email</Label>
+                            <p className="text-sm text-muted-foreground">
+                               If disabled, users cannot update their email address from settings.
+                            </p>
+                        </div>
+                        <Switch
+                            id="email-change-enabled"
+                            checked={emailChangeEnabled}
+                            onCheckedChange={setEmailChangeEnabled}
+                            disabled={isLoading}
+                            aria-label="Toggle email change ability"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>API & Proxy Settings</CardTitle>
+                    <CardDescription>Configure outbound requests. The proxy connection will be tested on save.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                     <div className="space-y-2">
+                        <Label htmlFor="api-key">Premiumy API Key</Label>
+                        <Input
+                            id="api-key"
+                            type="password"
+                            placeholder="Enter your API key"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="proxy-ip">Proxy IP Address</Label>
+                            <Input
+                                id="proxy-ip"
+                                placeholder="e.g., 40.81.241.64"
+                                value={proxySettings.ip}
+                                onChange={(e) => setProxySettings(prev => ({ ...prev, ip: e.target.value }))}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="proxy-port">Proxy Port</Label>
+                            <Input
+                                id="proxy-port"
+                                placeholder="e.g., 3128"
+                                value={proxySettings.port}
+                                onChange={(e) => setProxySettings(prev => ({ ...prev, port: e.target.value }))}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="proxy-username">Proxy Username (Optional)</Label>
+                            <Input
+                                id="proxy-username"
+                                placeholder="Username"
+                                value={proxySettings.username}
+                                onChange={(e) => setProxySettings(prev => ({ ...prev, username: e.target.value }))}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="proxy-password">Proxy Password (Optional)</Label>
+                            <Input
+                                id="proxy-password"
+                                type="password"
+                                placeholder="Password"
+                                value={proxySettings.password}
+                                onChange={(e) => setProxySettings(prev => ({ ...prev, password: e.target.value }))}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+                <Button onClick={handleSave} disabled={isLoading} size="lg">
                     {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Settings
+                    Save All Settings
                 </Button>
-            </CardFooter>
-        </Card>
+            </div>
+        </div>
     );
 }
 

@@ -33,3 +33,10 @@ export interface UserProfile {
   status?: 'active' | 'blocked';
   isAdmin?: boolean;
 }
+
+export interface ProxySettings {
+  ip?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+}

@@ -7,9 +7,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
-import type { FilterFormValues, SmsRecord, UserProfile } from '@/lib/types';
+import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings } from '@/lib/types';
 import { extractInfo } from '@/ai/flows/extract-info-from-sms';
 import { redirect } from 'next/navigation';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const filterSchema = z.object({
   startDate: z.date(),
@@ -22,6 +23,18 @@ async function getApiKey(): Promise<string> {
   await connectDB();
   const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
   return apiKeySetting?.value ?? '';
+}
+
+async function getProxyAgent(): Promise<HttpsProxyAgent<string> | undefined> {
+    await connectDB();
+    const proxySetting = await Setting.findOne({ key: 'proxySettings' });
+    if (!proxySetting || !proxySetting.value || !proxySetting.value.ip || !proxySetting.value.port) {
+        return undefined;
+    }
+    const proxy = proxySetting.value as ProxySettings;
+    const auth = proxy.username && proxy.password ? `${proxy.username}:${proxy.password}@` : '';
+    const proxyUrl = `http://${auth}${proxy.ip}:${proxy.port}`;
+    return new HttpsProxyAgent(proxyUrl);
 }
 
 export async function fetchSmsData(
@@ -37,6 +50,8 @@ export async function fetchSmsData(
   if (!validation.success) {
     return { error: 'Invalid filter data.' };
   }
+  
+  const agent = await getProxyAgent();
 
   const API_URL = 'https://api.premiumy.net/v1.0/csv';
   const body = {
@@ -63,6 +78,7 @@ export async function fetchSmsData(
         'Api-Key': apiKey,
       },
       body: JSON.stringify(body),
+      agent,
     });
 
     if (!response.ok) {
@@ -356,11 +372,32 @@ export async function getPublicSettings() {
 
 
 // --- Admin Actions ---
+async function testProxy(proxy: ProxySettings): Promise<boolean> {
+  if (!proxy.ip || !proxy.port) {
+    return true; // No proxy to test, so we can save this "empty" configuration.
+  }
+  try {
+    const auth = proxy.username && proxy.password ? `${proxy.username}:${proxy.password}@` : '';
+    const proxyUrl = `http://${auth}${proxy.ip}:${proxy.port}`;
+    const agent = new HttpsProxyAgent(proxyUrl);
+    
+    const response = await fetch('https://httpbin.org/get', { 
+        agent, 
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Proxy test failed:', error);
+    return false;
+  }
+}
+
 export async function getAdminSettings() {
     try {
         await connectDB();
         const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
-        const ipSetting = await Setting.findOne({ key: 'ipRestrictions' });
+        const proxySettingsSetting = await Setting.findOne({ key: 'proxySettings' });
         const signupSetting = await Setting.findOne({ key: 'signupEnabled' });
         const siteNameSetting = await Setting.findOne({ key: 'siteName' });
         const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
@@ -368,7 +405,7 @@ export async function getAdminSettings() {
         
         return {
             apiKey: apiKeySetting ? apiKeySetting.value : '',
-            ipRestrictions: ipSetting && Array.isArray(ipSetting.value) ? ipSetting.value.join(', ') : '',
+            proxySettings: proxySettingsSetting ? proxySettingsSetting.value : { ip: '', port: '', username: '', password: '' },
             signupEnabled: signupSetting?.value ?? true,
             siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
             primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
@@ -381,7 +418,7 @@ export async function getAdminSettings() {
 
 export async function updateAdminSettings(settings: { 
     apiKey?: string; 
-    ipRestrictions?: string; 
+    proxySettings?: ProxySettings; 
     signupEnabled?: boolean;
     siteName?: string;
     primaryColor?: string;
@@ -398,11 +435,14 @@ export async function updateAdminSettings(settings: {
                 { upsert: true, new: true }
             ));
         }
-        if (settings.ipRestrictions !== undefined) {
-            const ips = settings.ipRestrictions.split(',').map(ip => ip.trim()).filter(Boolean);
+        if (settings.proxySettings !== undefined) {
+            const isProxyValid = await testProxy(settings.proxySettings);
+            if (!isProxyValid) {
+                return { error: 'Proxy test failed. Please check the details and ensure the proxy is active.' };
+            }
             operations.push(Setting.findOneAndUpdate(
-                { key: 'ipRestrictions' },
-                { value: ips },
+                { key: 'proxySettings' },
+                { value: settings.proxySettings },
                 { upsert: true, new: true }
             ));
         }
