@@ -314,7 +314,7 @@ export function AdminDashboard() {
                         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                         <p className="text-muted-foreground">Welcome to the control center.</p>
                     </div>
-                     <div className="flex items-center gap-2">
+                     <div className="flex w-full flex-wrap justify-start gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
                         <form action={adminLogout}>
                             <Button variant="outline" type="submit">
                                 <LogOut className="mr-2 h-4 w-4" />
