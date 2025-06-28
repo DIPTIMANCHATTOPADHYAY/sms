@@ -2,10 +2,10 @@
 
 import { z } from 'zod';
 import { formatISO } from 'date-fns';
-import type { FilterFormValues, SmsRecord } from '@/lib/types';
+import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { FilterFormValues, SmsRecord, UserProfile } from '@/lib/types';
 import { extractInfo } from '@/ai/flows/extract-info-from-sms';
-
-const API_URL = 'https://api.premiumy.net/v1.0/csv';
 
 const filterSchema = z.object({
   startDate: z.date(),
@@ -14,14 +14,27 @@ const filterSchema = z.object({
   phone: z.string().optional(),
 });
 
+async function getApiKey(): Promise<string> {
+    try {
+        const settingsRef = doc(db, 'settings', 'api');
+        const docSnap = await getDoc(settingsRef);
+        if (docSnap.exists() && docSnap.data().key) {
+            return docSnap.data().key;
+        }
+    } catch (error) {
+        console.error("Could not fetch API key from Firestore, falling back to environment variable.", error);
+    }
+    // Fallback to environment variable if Firestore fails or key doesn't exist
+    return process.env.PREMIUMY_API_KEY || '';
+}
 
 export async function fetchSmsData(
   filter: FilterFormValues
 ): Promise<{ data?: SmsRecord[]; error?: string }> {
-  const apiKey = process.env.PREMIUMY_API_KEY;
+  const apiKey = await getApiKey();
 
   if (!apiKey) {
-    return { error: 'API key is not configured on the server. Please contact an administrator.' };
+    return { error: 'API key is not configured. Please contact an administrator.' };
   }
   
   const validation = filterSchema.safeParse(filter);
@@ -29,6 +42,7 @@ export async function fetchSmsData(
     return { error: 'Invalid filter data.' };
   }
 
+  const API_URL = 'https://api.premiumy.net/v1.0/csv';
   const body = {
     id: null,
     jsonrpc: '2.0',
@@ -97,4 +111,60 @@ export async function analyzeMessage(message: string) {
     console.error('Failed to analyze message:', error);
     return { error: error.message || 'An unknown error occurred during analysis.' };
   }
+}
+
+
+// Admin Actions
+export async function getAdminSettings() {
+    try {
+        const apiDoc = await getDoc(doc(db, 'settings', 'api'));
+        const ipDoc = await getDoc(doc(db, 'settings', 'ip'));
+        return {
+            apiKey: apiDoc.exists() ? apiDoc.data().key : '',
+            ipRestrictions: ipDoc.exists() ? ipDoc.data().allowed.join(', ') : '',
+        }
+    } catch (error) {
+        console.error("Error fetching admin settings:", error);
+        return { error: (error as Error).message };
+    }
+}
+
+export async function updateAdminSettings(settings: { apiKey?: string; ipRestrictions?: string }) {
+    try {
+        if (settings.apiKey !== undefined) {
+            await setDoc(doc(db, 'settings', 'api'), { key: settings.apiKey });
+        }
+        if (settings.ipRestrictions !== undefined) {
+            const ips = settings.ipRestrictions.split(',').map(ip => ip.trim()).filter(Boolean);
+            await setDoc(doc(db, 'settings', 'ip'), { allowed: ips });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating admin settings:", error);
+        return { error: (error as Error).message };
+    }
+}
+
+export async function getAllUsers(): Promise<{ users?: Omit<UserProfile, 'providerId' | 'uid'>[], error?: string }> {
+    try {
+        const usersRef = collection(db, 'users');
+        const querySnapshot = await getDocs(usersRef);
+        const users = querySnapshot.docs.map(doc => doc.data() as UserProfile);
+        return { users };
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        return { error: (error as Error).message };
+    }
+}
+
+
+export async function toggleUserStatus(uid: string, status: 'active' | 'blocked') {
+    try {
+        const userRef = doc(db, 'users', uid);
+        await setDoc(userRef, { status }, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error("Error toggling user status:", error);
+        return { error: (error as Error).message };
+    }
 }

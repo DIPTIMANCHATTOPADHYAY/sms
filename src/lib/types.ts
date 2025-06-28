@@ -1,5 +1,6 @@
 import type { extractInfo } from '@/ai/flows/extract-info-from-sms';
 import { z } from 'zod';
+import type { User } from 'firebase/auth';
 
 export interface SmsRecord {
   dateTime: string;
@@ -24,3 +25,8 @@ export type FilterFormValues = z.infer<typeof filterFormSchema>;
 
 
 export type ExtractedInfo = Awaited<ReturnType<typeof extractInfo>>;
+
+export interface UserProfile extends User {
+  status?: 'active' | 'blocked';
+  isAdmin?: boolean;
+}

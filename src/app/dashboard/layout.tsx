@@ -1,6 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, LoaderCircle, ShieldAlert } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,12 +11,66 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading, userProfile } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
+        <LoaderCircle className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user && !loading) {
+    router.replace('/login');
+    return null;
+  }
+  
+  if (userProfile?.status === 'blocked') {
+    return (
+        <AlertDialog open={true}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                        <ShieldAlert className="h-6 w-6 text-destructive"/> Account Blocked
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Your account has been blocked by an administrator. Please contact support for assistance.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    )
+  }
+
   return (
     <div className="min-h-screen w-full flex flex-col">
       <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -23,9 +79,11 @@ export default function DashboardLayout({
             SMS Inspector 2.0
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="outline" size="sm">Admin Panel</Button>
-            </Link>
+            {userProfile?.isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm">Admin Panel</Button>
+              </Link>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -34,18 +92,16 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.email || 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem disabled>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/login">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

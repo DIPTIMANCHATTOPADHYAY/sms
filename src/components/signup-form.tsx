@@ -10,6 +10,10 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -31,19 +35,35 @@ export function SignupForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Mock signup logic
-    setTimeout(() => {
-      // In a real app, you'd call an API to create a new user
-      console.log(values);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      // Update Firebase auth profile
+      await updateProfile(user, { displayName: values.name });
+
+      // Create user document in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: values.name,
+        photoURL: user.photoURL,
+        status: 'active',
+        isAdmin: false, // Default to not admin
+      });
+      
       toast({
         title: 'Account Created',
         description: 'You can now log in with your credentials.',
       });
       router.push('/login');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Sign Up Failed', description: error.message });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   }
 
   return (
