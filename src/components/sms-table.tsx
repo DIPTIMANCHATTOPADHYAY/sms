@@ -34,7 +34,7 @@ export function SmsTable({ records, isLoading }: SmsTableProps) {
 
   return (
     <div className="rounded-md border">
-      <ScrollArea className="w-full" style={{ height: '400px' }}>
+      <ScrollArea className="h-[60vh] w-full">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
               <TableRow>
