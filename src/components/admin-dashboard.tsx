@@ -246,7 +246,7 @@ function SettingsTab() {
                             <Input
                                 id="proxy-ip"
                                 placeholder="e.g., 40.81.241.64"
-                                value={proxySettings.ip}
+                                value={proxySettings.ip || ''}
                                 onChange={(e) => setProxySettings(prev => ({ ...prev, ip: e.target.value }))}
                                 disabled={isLoading}
                             />
@@ -256,7 +256,7 @@ function SettingsTab() {
                             <Input
                                 id="proxy-port"
                                 placeholder="e.g., 3128"
-                                value={proxySettings.port}
+                                value={proxySettings.port || ''}
                                 onChange={(e) => setProxySettings(prev => ({ ...prev, port: e.target.value }))}
                                 disabled={isLoading}
                             />
@@ -268,7 +268,7 @@ function SettingsTab() {
                             <Input
                                 id="proxy-username"
                                 placeholder="Username"
-                                value={proxySettings.username}
+                                value={proxySettings.username || ''}
                                 onChange={(e) => setProxySettings(prev => ({ ...prev, username: e.target.value }))}
                                 disabled={isLoading}
                             />
@@ -279,7 +279,7 @@ function SettingsTab() {
                                 id="proxy-password"
                                 type="password"
                                 placeholder="Password"
-                                value={proxySettings.password}
+                                value={proxySettings.password || ''}
                                 onChange={(e) => setProxySettings(prev => ({ ...prev, password: e.target.value }))}
                                 disabled={isLoading}
                             />
