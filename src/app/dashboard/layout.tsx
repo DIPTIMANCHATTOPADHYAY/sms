@@ -77,9 +77,9 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen w-full flex flex-col">
-      <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <header className="sticky top-0 z-40 w-full border-b bg-sidebar text-sidebar-foreground border-sidebar-border">
         <div className="container mx-auto flex h-16 items-center justify-between p-4 sm:p-6 lg:p-8">
-          <Link href="/dashboard" className="font-headline text-xl font-bold text-primary">
+          <Link href="/dashboard" className="font-headline text-xl font-bold text-sidebar-foreground">
             {siteName}
           </Link>
           <div className="flex items-center gap-4">
@@ -90,7 +90,7 @@ export default function DashboardLayout({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-sidebar-accent">
                   <User className="h-5 w-5" />
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
