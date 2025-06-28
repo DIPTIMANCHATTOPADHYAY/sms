@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,12 +35,23 @@ export function SmsInspector() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: undefined,
+      endDate: undefined,
       senderId: 'Telegram',
       phone: '23674400423',
     },
   });
+
+  // Set default dates on client mount to avoid hydration mismatch
+  useEffect(() => {
+    const now = new Date();
+    form.reset({
+      ...form.getValues(),
+      startDate: now,
+      endDate: now,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!apiKey) {
