@@ -1,6 +1,9 @@
-import { redirect } from 'next/navigation';
+import { LandingPage } from '@/components/landing-page';
+import { getPublicSettings } from '@/app/actions';
 
-export default function Home() {
-  redirect('/login');
-  return null;
+export default async function Home() {
+  const { siteName } = await getPublicSettings();
+  const { signupEnabled } = await getPublicSettings();
+  
+  return <LandingPage siteName={siteName} signupEnabled={signupEnabled} />;
 }
