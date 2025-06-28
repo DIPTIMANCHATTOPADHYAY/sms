@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 
 
 function UserManagementTab() {
@@ -105,6 +106,7 @@ function SettingsTab() {
     const { toast } = useToast();
     const [apiKey, setApiKey] = useState('');
     const [ipRestrictions, setIpRestrictions] = useState('');
+    const [signupEnabled, setSignupEnabled] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     
     useEffect(() => {
@@ -116,6 +118,7 @@ function SettingsTab() {
             } else {
                 setApiKey(result.apiKey || '');
                 setIpRestrictions(result.ipRestrictions || '');
+                setSignupEnabled(result.signupEnabled);
             }
             setIsLoading(false);
         }
@@ -124,7 +127,7 @@ function SettingsTab() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        const result = await updateAdminSettings({ apiKey, ipRestrictions });
+        const result = await updateAdminSettings({ apiKey, ipRestrictions, signupEnabled });
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
         } else {
@@ -140,6 +143,21 @@ function SettingsTab() {
                 <CardDescription>Manage API keys and security settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+                <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="signup-enabled" className="cursor-pointer">Allow User Signups</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Enable or disable new user registration.
+                        </p>
+                    </div>
+                    <Switch
+                        id="signup-enabled"
+                        checked={signupEnabled}
+                        onCheckedChange={setSignupEnabled}
+                        disabled={isLoading}
+                        aria-label="Toggle user signups"
+                    />
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="api-key">Premiumy API Key</Label>
                     <Input

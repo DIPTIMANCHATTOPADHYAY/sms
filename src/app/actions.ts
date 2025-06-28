@@ -151,6 +151,16 @@ export async function analyzeMessage(message: string) {
 
 // --- Auth Actions ---
 
+export async function getSignupStatus() {
+    try {
+        await connectDB();
+        const signupSetting = await Setting.findOne({ key: 'signupEnabled' });
+        return { signupEnabled: signupSetting?.value ?? true };
+    } catch (error) {
+        return { signupEnabled: true };
+    }
+}
+
 const signupSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
@@ -160,6 +170,12 @@ const signupSchema = z.object({
 export async function signup(values: z.infer<typeof signupSchema>) {
     try {
         await connectDB();
+        
+        const { signupEnabled } = await getSignupStatus();
+        if (!signupEnabled) {
+            return { error: 'User registration is currently disabled by the administrator.' };
+        }
+
         const existingUser = await User.findOne({ email: values.email });
         if (existingUser) {
             return { error: 'User with this email already exists.' };
@@ -251,23 +267,74 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
 }
 
 
+// --- User Profile Actions ---
+const userProfileSchema = z.object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+    email: z.string().email({ message: 'Please enter a valid email address.' }),
+});
+
+export async function updateUserProfile(userId: string, values: z.infer<typeof userProfileSchema>) {
+    try {
+        const validation = userProfileSchema.safeParse(values);
+        if (!validation.success) {
+            return { error: 'Invalid data provided.' };
+        }
+
+        await connectDB();
+        
+        const existingUserWithEmail = await User.findOne({ email: values.email, _id: { $ne: userId } });
+        if (existingUserWithEmail) {
+            return { error: 'This email is already in use by another account.' };
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, { name: values.name, email: values.email }, { new: true });
+        
+        if (!updatedUser) {
+            return { error: 'User not found.' };
+        }
+
+        // Re-issue a new token with updated information
+        const token = jwt.sign(
+          { userId: updatedUser._id, isAdmin: updatedUser.isAdmin, status: updatedUser.status },
+          process.env.JWT_SECRET!,
+          { expiresIn: '1d' }
+        );
+
+        cookies().set('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24, // 1 day
+            path: '/',
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error('Update profile error:', error);
+        return { error: 'An unexpected error occurred while updating your profile.' };
+    }
+}
+
+
 // --- Admin Actions ---
 export async function getAdminSettings() {
     try {
         await connectDB();
         const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
         const ipSetting = await Setting.findOne({ key: 'ipRestrictions' });
+        const signupSetting = await Setting.findOne({ key: 'signupEnabled' });
         
         return {
             apiKey: apiKeySetting ? apiKeySetting.value : '',
             ipRestrictions: ipSetting && Array.isArray(ipSetting.value) ? ipSetting.value.join(', ') : '',
+            signupEnabled: signupSetting?.value ?? true,
         }
     } catch (error) {
         return { error: (error as Error).message };
     }
 }
 
-export async function updateAdminSettings(settings: { apiKey?: string; ipRestrictions?: string }) {
+export async function updateAdminSettings(settings: { apiKey?: string; ipRestrictions?: string, signupEnabled?: boolean }) {
     try {
         await connectDB();
         if (settings.apiKey !== undefined) {
@@ -282,6 +349,13 @@ export async function updateAdminSettings(settings: { apiKey?: string; ipRestric
             await Setting.findOneAndUpdate(
                 { key: 'ipRestrictions' },
                 { value: ips },
+                { upsert: true, new: true }
+            );
+        }
+        if (settings.signupEnabled !== undefined) {
+            await Setting.findOneAndUpdate(
+                { key: 'signupEnabled' },
+                { value: settings.signupEnabled },
                 { upsert: true, new: true }
             );
         }
