@@ -1,11 +1,6 @@
-import { SmsInspector } from '@/components/sms-inspector';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main className="min-h-screen w-full bg-background text-foreground p-4 sm:p-6 lg:p-8">
-      <div className="container mx-auto">
-        <SmsInspector />
-      </div>
-    </main>
-  );
+  redirect('/login');
+  return null;
 }

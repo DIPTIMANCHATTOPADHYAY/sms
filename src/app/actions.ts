@@ -49,9 +49,14 @@ function parseSmsCsv(csvText: string): SmsRecord[] {
 }
 
 export async function fetchSmsData(
-  apiKey: string,
   filter: FilterFormValues
 ): Promise<{ data?: SmsRecord[]; error?: string }> {
+  const apiKey = process.env.PREMIUMY_API_KEY;
+
+  if (!apiKey) {
+    return { error: 'API key is not configured on the server. Please contact an administrator.' };
+  }
+  
   const validation = filterSchema.safeParse(filter);
   if (!validation.success) {
     return { error: 'Invalid filter data.' };
@@ -63,13 +68,13 @@ export async function fetchSmsData(
     method: 'sms.mdr_full:get_list',
     params: {
       filter: {
-        start_date: formatISO(filter.startDate),
-        end_date: formatISO(filter.endDate),
+        start_date: formatISO(filter.startDate!, { representation: 'date' }) + ' 00:00:00',
+        end_date: formatISO(filter.endDate!, { representation: 'date' }) + ' 23:59:59',
         senderid: filter.senderId,
         phone: filter.phone,
       },
       page: 1,
-      per_page: 50, // Let's fetch a bit more
+      per_page: 100,
     },
   };
 
