@@ -257,6 +257,7 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
 export async function logout() {
     cookies().delete('token');
+    cookies().delete('admin_session');
 }
 
 export async function getCurrentUser(): Promise<UserProfile | null> {
@@ -544,6 +545,9 @@ export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
 }
 
 export async function adminLogout() {
-  cookies().set('admin_session', '', { maxAge: -1, path: '/' });
+  cookies().delete('admin_session');
+  cookies().delete('token');
   redirect('/admin/login');
 }
+
+    
