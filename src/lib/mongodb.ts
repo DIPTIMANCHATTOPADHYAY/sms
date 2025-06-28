@@ -43,7 +43,7 @@ async function seedDatabase() {
             { key: 'apiKey', value: 'oKREnlZLQeSs_ntZ2TAV6A', name: 'Default API Key' },
             { 
               key: 'proxySettings', 
-              value: { ip: '40.81.241.64', port: '3128', username: 'demo', password: 'demo' }, 
+              value: { ip: '', port: '', username: '', password: '' }, 
               name: 'Default Proxy Settings' 
             },
             { key: 'siteName', value: 'SMS Inspector 2.0', name: 'Default Site Name' },
