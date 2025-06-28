@@ -60,8 +60,8 @@ export async function fetchSmsData(
     method: 'sms.mdr_full:get_list',
     params: {
       filter: {
-        start_date: format(filter.startDate!, 'yyyy-MM-dd 00:00:00'),
-        end_date: format(filter.endDate!, 'yyyy-MM-dd 23:59:59'),
+        start_date: format(filter.startDate!, 'yyyy-MM-dd HH:mm:ss'),
+        end_date: format(filter.endDate!, 'yyyy-MM-dd HH:mm:ss'),
         senderid: filter.senderId,
         phone: filter.phone,
       },
@@ -402,10 +402,21 @@ export async function getAdminSettings() {
         const siteNameSetting = await Setting.findOne({ key: 'siteName' });
         const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
         const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
+
+        const rawProxy = proxySettingsSetting ? proxySettingsSetting.value : {};
+        // Ensure proxySettings is always a valid object, even if DB data is malformed
+        const safeProxySettings = (typeof rawProxy === 'object' && rawProxy !== null && !Array.isArray(rawProxy))
+            ? rawProxy
+            : {};
         
         return {
             apiKey: apiKeySetting ? apiKeySetting.value : '',
-            proxySettings: proxySettingsSetting ? proxySettingsSetting.value : { ip: '', port: '', username: '', password: '' },
+            proxySettings: {
+                ip: safeProxySettings.ip || '',
+                port: safeProxySettings.port || '',
+                username: safeProxySettings.username || '',
+                password: safeProxySettings.password || '',
+            },
             signupEnabled: signupSetting?.value ?? true,
             siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
             primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
