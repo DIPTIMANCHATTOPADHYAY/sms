@@ -17,7 +17,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
-  origin: z.string().optional(),
+  origin: z.string().min(1, { message: 'Sender (Origin) is required to search.' }),
   destination: z.string().optional(),
   message: z.string().optional(),
   per_page: z.coerce.number().optional(),
@@ -73,7 +73,7 @@ export function AccessListViewer() {
           <Card>
               <CardHeader>
                   <CardTitle>Access List</CardTitle>
-                  <CardDescription>Use the filters below to search the access list.</CardDescription>
+                  <CardDescription>Use the filters below to search the access list. Sender (Origin) is required.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -122,7 +122,7 @@ export function AccessListViewer() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Results</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} defaultValue={String(field.value)}>
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Results per page" />
