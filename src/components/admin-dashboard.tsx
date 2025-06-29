@@ -62,7 +62,11 @@ function UserManagementTab() {
             toast({ variant: 'destructive', title: 'Update failed', description: result.error });
         } else {
             toast({ title: 'Status Updated' });
-            fetchUsers();
+            setUsers(currentUsers =>
+                currentUsers.map(u =>
+                    u.id === user.id ? { ...u, status: newStatus } : u
+                )
+            );
         }
     };
     
@@ -73,7 +77,11 @@ function UserManagementTab() {
             toast({ variant: 'destructive', title: 'Update failed', description: result.error });
         } else {
             toast({ title: 'Permission Updated' });
-            fetchUsers();
+            setUsers(currentUsers =>
+                currentUsers.map(u =>
+                    u.id === user.id ? { ...u, canAddNumbers: newPermission } : u
+                )
+            );
         }
     };
 
