@@ -98,6 +98,7 @@ const accessListFilterFormSchema = z.object({
   origin: z.string().optional(),
   destination: z.string().optional(),
   message: z.string().optional(),
+  per_page: z.number().optional(),
 });
 
 export type AccessListFilterFormValues = z.infer<typeof accessListFilterFormSchema>;

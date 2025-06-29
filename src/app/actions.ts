@@ -312,7 +312,7 @@ export async function fetchAccessListData(
         sp_key_list: null
       },
       page: 1,
-      per_page: 100,
+      per_page: filter.per_page || 100,
     },
   };
 
