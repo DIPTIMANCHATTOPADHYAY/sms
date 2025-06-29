@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, LoaderCircle, ShieldAlert, List } from 'lucide-react';
+import { User, Settings, LogOut, LoaderCircle, ShieldAlert, List, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,9 +42,10 @@ export default function DashboardLayout({
   }, [loading, user, router]);
 
   const handleLogout = async () => {
+    router.prefetch('/login');
     await logout();
+    refreshUser(); 
     router.push('/login');
-    refreshUser(); // Update the auth context after navigating
   };
 
   if (loading || !user) {
@@ -99,15 +100,21 @@ export default function DashboardLayout({
                 <DropdownMenuLabel>{user.name || user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                  <Link href="/dashboard">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>SMS Report</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/number-list">
                     <List className="mr-2 h-4 w-4" />
                     <span>Number List</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
