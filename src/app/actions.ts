@@ -37,6 +37,26 @@ async function getProxyAgent(): Promise<HttpsProxyAgent<string> | undefined> {
     return new HttpsProxyAgent(proxyUrl);
 }
 
+async function getErrorMappings(): Promise<Record<string, string>> {
+    try {
+        await connectDB();
+        const mappingsSetting = await Setting.findOne({ key: 'errorMappings' });
+        if (!mappingsSetting || !Array.isArray(mappingsSetting.value)) {
+            return {};
+        }
+        return mappingsSetting.value.reduce((acc, mapping) => {
+            if (mapping.reasonCode && mapping.customMessage) {
+                acc[mapping.reasonCode] = mapping.customMessage;
+            }
+            return acc;
+        }, {});
+    } catch (error) {
+        console.error('Error fetching error mappings:', error);
+        return {};
+    }
+}
+
+
 export async function fetchSmsData(
   filter: FilterFormValues
 ): Promise<{ data?: SmsRecord[]; error?: string }> {
@@ -83,6 +103,21 @@ export async function fetchSmsData(
 
     if (!response.ok) {
        const errorText = await response.text();
+        try {
+            const jsonError = JSON.parse(errorText);
+            if (jsonError.error) {
+                const reasonCode = jsonError.error.reason_code;
+                if (reasonCode) {
+                    const errorMap = await getErrorMappings();
+                    const customMessage = errorMap[reasonCode];
+                    if (customMessage) {
+                        return { error: customMessage };
+                    }
+                }
+                return { error: `API Error: ${jsonError.error.message}` };
+            }
+        } catch (e) {
+        }
       return { error: `API Error: ${response.status} ${response.statusText}. ${errorText}` };
     }
 
@@ -95,6 +130,14 @@ export async function fetchSmsData(
         try {
             const jsonError = JSON.parse(csvText);
             if (jsonError.error) {
+                const reasonCode = jsonError.error.reason_code;
+                 if (reasonCode) {
+                    const errorMap = await getErrorMappings();
+                    const customMessage = errorMap[reasonCode];
+                    if (customMessage) {
+                        return { error: customMessage };
+                    }
+                }
                 return { error: `API returned an error: ${jsonError.error.message}` };
             }
         } catch (e) {
@@ -404,6 +447,7 @@ export async function getAdminSettings() {
         const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
         const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
         const numberListSetting = await Setting.findOne({ key: 'numberList' });
+        const errorMappingsSetting = await Setting.findOne({ key: 'errorMappings' });
 
         const rawProxy = proxySettingsSetting ? proxySettingsSetting.value : {};
         // Ensure proxySettings is always a valid object, even if DB data is malformed
@@ -424,6 +468,7 @@ export async function getAdminSettings() {
             primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
             emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
             numberList: numberListSetting ? numberListSetting.value : [],
+            errorMappings: errorMappingsSetting ? errorMappingsSetting.value : [],
         }
     } catch (error) {
         return { error: (error as Error).message };
@@ -438,6 +483,7 @@ export async function updateAdminSettings(settings: {
     primaryColor?: string;
     emailChangeEnabled?: boolean;
     numberList?: string[];
+    errorMappings?: { reasonCode: string, customMessage: string }[];
 }) {
     try {
         await connectDB();
@@ -493,6 +539,13 @@ export async function updateAdminSettings(settings: {
             operations.push(Setting.findOneAndUpdate(
                 { key: 'numberList' },
                 { value: settings.numberList },
+                { upsert: true, new: true }
+            ));
+        }
+         if (settings.errorMappings !== undefined) {
+            operations.push(Setting.findOneAndUpdate(
+                { key: 'errorMappings' },
+                { value: settings.errorMappings },
                 { upsert: true, new: true }
             ));
         }

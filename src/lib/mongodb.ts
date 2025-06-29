@@ -51,6 +51,7 @@ async function seedDatabase() {
             { key: 'emailChangeEnabled', value: true, name: 'Default Email Change Policy' },
             { key: 'signupEnabled', value: true, name: 'Default Signup Policy' },
             { key: 'numberList', value: [], name: 'Default Number List' },
+            { key: 'errorMappings', value: [], name: 'Custom Error Mappings' },
         ];
 
         for (const setting of settingsToSeed) {
