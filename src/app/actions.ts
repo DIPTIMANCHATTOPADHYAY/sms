@@ -197,9 +197,8 @@ export async function fetchSmsData(
 }
 
 function extractInfoWithoutAI(message: string): { confirmationCode?: string; link?: string } {
-    // Regex for confirmation codes: looks for 4-8 consecutive digits as a whole word.
-    // This is a common pattern for verification codes and helps avoid matching parts of phone numbers.
-    const codeRegex = /\b\d{4,8}\b/g;
+    // Regex for confirmation codes: looks for 4-8 consecutive digits, or a 123-456 pattern.
+    const codeRegex = /\b(\d{4,8}|\d{3}-\d{3})\b/g;
     const codes = message.match(codeRegex);
     const confirmationCode = codes ? codes[0] : undefined;
 

@@ -54,10 +54,17 @@ export function MessageCell({ message }: MessageCellProps) {
         description: result.error,
       });
     } else if (result.data) {
-      setAnalysisResult(result.data);
-       toast({
-        title: 'Analysis Complete',
-      });
+       if (result.data.confirmationCode || result.data.link) {
+        setAnalysisResult(result.data);
+        toast({
+          title: 'Analysis Complete',
+        });
+      } else {
+        toast({
+          title: 'Nothing to Extract',
+          description: 'No codes or links were found in this message.',
+        });
+      }
     }
   };
 
