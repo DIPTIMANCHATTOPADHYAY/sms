@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays } from 'date-fns';
 import { CalendarIcon, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -40,14 +40,20 @@ export function SmsInspector() {
     },
   });
 
-  // Set default dates on client mount to avoid hydration mismatch
+  // Fetch initial data for the last 2 days on component mount.
   useEffect(() => {
     const now = new Date();
-    form.reset({
-      ...form.getValues(),
-      startDate: startOfDay(now),
-      endDate: endOfDay(now),
-    });
+    const yesterday = subDays(now, 1);
+    
+    const initialValues = {
+        startDate: startOfDay(yesterday),
+        endDate: endOfDay(now),
+        senderId: '',
+        phone: '',
+    };
+    
+    form.reset(initialValues);
+    onSubmit(initialValues);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
