@@ -70,16 +70,17 @@ function UserManagementTab() {
         }
     };
     
-    const handleToggleAddNumberPermission = async (user: UserProfile) => {
-        const newPermission = !user.canAddNumbers;
-        const result = await toggleUserAddNumberPermission(user.id, newPermission);
+    const handleToggleAddNumberPermission = async (user: UserProfile, checked: boolean) => {
+        const result = await toggleUserAddNumberPermission(user.id, checked);
+
         if (result.error) {
             toast({ variant: 'destructive', title: 'Update failed', description: result.error });
         } else {
             toast({ title: 'Permission Updated' });
+            // Optimistically update the local state to match.
             setUsers(currentUsers =>
                 currentUsers.map(u =>
-                    u.id === user.id ? { ...u, canAddNumbers: newPermission } : u
+                    u.id === user.id ? { ...u, canAddNumbers: checked } : u
                 )
             );
         }
@@ -133,8 +134,8 @@ function UserManagementTab() {
                                         <div className="flex items-center gap-2">
                                             <Switch
                                                 id={`permission-${user.id}`}
-                                                checked={user.canAddNumbers}
-                                                onCheckedChange={() => handleToggleAddNumberPermission(user)}
+                                                checked={user.canAddNumbers || false}
+                                                onCheckedChange={(checked) => handleToggleAddNumberPermission(user, checked)}
                                                 disabled={user.isAdmin}
                                                 aria-label="Toggle permission to add numbers"
                                             />

@@ -591,7 +591,10 @@ export async function toggleUserStatus(id: string, status: 'active' | 'blocked')
 export async function toggleUserAddNumberPermission(id: string, canAddNumbers: boolean) {
     try {
         await connectDB();
-        await User.findByIdAndUpdate(id, { canAddNumbers });
+        const updatedUser = await User.findByIdAndUpdate(id, { canAddNumbers: canAddNumbers }, { new: true });
+        if (!updatedUser) {
+            return { error: 'User not found.' };
+        }
         return { success: true };
     } catch (error) {
         return { error: (error as Error).message };
