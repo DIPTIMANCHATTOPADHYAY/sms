@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from './ui/textarea';
 
 
 function UserManagementTab() {
@@ -107,6 +108,147 @@ function UserManagementTab() {
     );
 }
 
+function NumberManagementTab() {
+    const { toast } = useToast();
+    const [numberList, setNumberList] = useState<string[]>([]);
+    const [newNumber, setNewNumber] = useState('');
+    const [bulkNumbers, setBulkNumbers] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
+
+    useEffect(() => {
+        async function loadNumbers() {
+            setIsFetching(true);
+            const result = await getAdminSettings();
+            if (result.error) {
+                 toast({ variant: 'destructive', title: 'Error fetching numbers', description: result.error });
+            } else {
+                setNumberList(result.numberList || []);
+            }
+            setIsFetching(false);
+        }
+        loadNumbers();
+    }, [toast]);
+
+    const handleAddNumber = () => {
+        if (newNumber.trim() && !numberList.includes(newNumber.trim())) {
+            setNumberList([...numberList, newNumber.trim()]);
+            setNewNumber('');
+        }
+    };
+
+    const handleRemoveNumber = (numberToRemove: string) => {
+        setNumberList(numberList.filter(num => num !== numberToRemove));
+    };
+
+    const handleBulkAdd = () => {
+        const numbersToAdd = bulkNumbers
+            .split('\n')
+            .map(n => n.trim())
+            .filter(n => n && !numberList.includes(n));
+            
+        if (numbersToAdd.length > 0) {
+            const uniqueNewNumbers = [...new Set(numbersToAdd)];
+            setNumberList([...numberList, ...uniqueNewNumbers]);
+            setBulkNumbers('');
+            toast({ title: `${uniqueNewNumbers.length} new numbers added.` });
+        } else {
+             toast({ variant: 'destructive', title: 'No new numbers to add', description: 'All numbers are either empty or already in the list.' });
+        }
+    };
+    
+    const handleSave = async () => {
+        setIsLoading(true);
+        const result = await updateAdminSettings({ numberList });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Failed to save numbers', description: result.error });
+        } else {
+            toast({ title: 'Number List Saved' });
+        }
+        setIsLoading(false);
+    };
+
+    if (isFetching) {
+        return (
+            <div className="flex justify-center items-center h-40">
+                <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-6">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Current Number List</CardTitle>
+                    <CardDescription>Manage the list of numbers displayed to users. There are currently {numberList.length} numbers.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-60 w-full rounded-md border">
+                        <div className="p-4 space-y-2">
+                            {numberList.length > 0 ? (
+                                numberList.map(num => (
+                                    <div key={num} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                                        <span className="font-mono text-sm">{num}</span>
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveNumber(num)} disabled={isLoading}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-10">No numbers added yet.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Add Single Number</CardTitle>
+                    <CardDescription>Manually add a single number to the list.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="flex gap-2">
+                        <Input 
+                            value={newNumber}
+                            onChange={(e) => setNewNumber(e.target.value)}
+                            placeholder="Enter a new number"
+                            disabled={isLoading}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
+                        />
+                        <Button onClick={handleAddNumber} disabled={isLoading || !newNumber.trim()}>Add</Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Bulk Upload Numbers</CardTitle>
+                    <CardDescription>Paste a list of numbers, one per line, to add them all at once.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea
+                        placeholder="Paste numbers here, one per line..."
+                        value={bulkNumbers}
+                        onChange={(e) => setBulkNumbers(e.target.value)}
+                        className="h-40"
+                        disabled={isLoading}
+                    />
+                    <Button onClick={handleBulkAdd} disabled={isLoading || !bulkNumbers.trim()}>Add Numbers from List</Button>
+                </CardContent>
+            </Card>
+
+             <div className="flex justify-end">
+                <Button onClick={handleSave} disabled={isLoading} size="lg">
+                    {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Number List
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 function SettingsTab() {
     const { toast } = useToast();
     const [apiKey, setApiKey] = useState('');
@@ -115,8 +257,6 @@ function SettingsTab() {
     const [siteName, setSiteName] = useState('');
     const [primaryColor, setPrimaryColor] = useState('');
     const [emailChangeEnabled, setEmailChangeEnabled] = useState(true);
-    const [numberList, setNumberList] = useState<string[]>([]);
-    const [newNumber, setNewNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
     useEffect(() => {
@@ -132,23 +272,11 @@ function SettingsTab() {
                 setSiteName(result.siteName || '');
                 setPrimaryColor(result.primaryColor || '');
                 setEmailChangeEnabled(result.emailChangeEnabled);
-                setNumberList(result.numberList || []);
             }
             setIsLoading(false);
         }
         loadSettings();
     }, [toast]);
-
-    const handleAddNumber = () => {
-        if (newNumber.trim() && !numberList.includes(newNumber.trim())) {
-            setNumberList([...numberList, newNumber.trim()]);
-            setNewNumber('');
-        }
-    };
-
-    const handleRemoveNumber = (numberToRemove: string) => {
-        setNumberList(numberList.filter(num => num !== numberToRemove));
-    };
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -159,7 +287,6 @@ function SettingsTab() {
             siteName,
             primaryColor,
             emailChangeEnabled,
-            numberList,
         });
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
@@ -241,41 +368,6 @@ function SettingsTab() {
                             aria-label="Toggle email change ability"
                         />
                     </div>
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle>Number List Management</CardTitle>
-                    <CardDescription>Manage the list of numbers displayed to users.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                        <Input 
-                            value={newNumber}
-                            onChange={(e) => setNewNumber(e.target.value)}
-                            placeholder="Enter a new number"
-                            disabled={isLoading}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
-                        />
-                        <Button onClick={handleAddNumber} disabled={isLoading || !newNumber.trim()}>Add</Button>
-                    </div>
-                    <ScrollArea className="h-40 w-full rounded-md border">
-                        <div className="p-4 space-y-2">
-                            {numberList.length > 0 ? (
-                                numberList.map(num => (
-                                    <div key={num} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
-                                        <span className="font-mono text-sm">{num}</span>
-                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveNumber(num)} disabled={isLoading}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm text-muted-foreground text-center py-10">No numbers added yet.</p>
-                            )}
-                        </div>
-                    </ScrollArea>
                 </CardContent>
             </Card>
 
@@ -377,12 +469,16 @@ export function AdminDashboard() {
                     </div>
                 </div>
                 <Tabs defaultValue="users" className="w-full">
-                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 max-w-md">
+                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 max-w-lg">
                         <TabsTrigger value="users">User Management</TabsTrigger>
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                        <TabsTrigger value="numbers">Number Management</TabsTrigger>
+                        <TabsTrigger value="settings">General Settings</TabsTrigger>
                     </TabsList>
                     <TabsContent value="users" className="mt-4">
                         <UserManagementTab />
+                    </TabsContent>
+                    <TabsContent value="numbers" className="mt-4">
+                        <NumberManagementTab />
                     </TabsContent>
                     <TabsContent value="settings" className="mt-4">
                         <SettingsTab />
