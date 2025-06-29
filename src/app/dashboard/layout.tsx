@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, LoaderCircle, ShieldAlert, List, MessageSquare } from 'lucide-react';
+import { User, Settings, LogOut, LoaderCircle, ShieldAlert, List, MessageSquare, ListChecks } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +103,12 @@ export default function DashboardLayout({
                   <Link href="/dashboard">
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>SMS Report</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/access-list">
+                    <ListChecks className="mr-2 h-4 w-4" />
+                    <span>Access List</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

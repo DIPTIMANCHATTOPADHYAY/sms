@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
-import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings, ExtractedInfo, AdminSettings, PublicSettings } from '@/lib/types';
+import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings, ExtractedInfo, AdminSettings, PublicSettings, AccessListFilterFormValues, AccessListRecord } from '@/lib/types';
 import { allColorKeys } from '@/lib/types';
 import { redirect } from 'next/navigation';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -285,6 +285,189 @@ function extractInfoWithoutAI(message: string): ExtractedInfo {
     const link = links ? links[0] : undefined;
     
     return { confirmationCode, link };
+}
+
+export async function fetchAccessListData(
+  filter: AccessListFilterFormValues
+): Promise<{ data?: AccessListRecord[]; error?: string }> {
+  const apiKey = await getApiKey();
+
+  if (!apiKey) {
+    return { error: 'API key is not configured. Please set it in the admin panel.' };
+  }
+  
+  const agent = await getProxyAgent();
+
+  const API_URL = 'https://api.premiumy.net/v1.0/csv';
+  const body = {
+    id: null,
+    jsonrpc: '2.0',
+    method: 'sms.access_list__get_list:account_price',
+    params: {
+      filter: {
+        cur_key: 1,
+        destination: filter.destination,
+        message: filter.message,
+        origin: filter.origin,
+        sp_key_list: null
+      },
+      page: 1,
+      per_page: 100,
+    },
+  };
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Api-Key': apiKey,
+      },
+      body: JSON.stringify(body),
+      agent,
+    });
+
+    if (!response.ok) {
+       const errorText = await response.text();
+        try {
+            const jsonError = JSON.parse(errorText);
+            if (jsonError.error) {
+                const reasonCode = jsonError.error.reason_code;
+                if (reasonCode) {
+                    const errorMap = await getErrorMappings();
+                    const customMessage = errorMap[reasonCode];
+                    if (customMessage) {
+                        return { error: customMessage };
+                    }
+                }
+                return { error: `API Error: ${jsonError.error.message}` };
+            }
+        } catch (e) {
+        }
+      return { error: `API Error: ${response.status} ${response.statusText}. ${errorText}` };
+    }
+
+    const csvText = await response.text();
+    if (!csvText || csvText.trim() === '') {
+        return { data: [] };
+    }
+    
+    if (csvText.trim().startsWith('{')) {
+        try {
+            const jsonError = JSON.parse(csvText);
+            if (jsonError.error) {
+                const reasonCode = jsonError.error.reason_code;
+                 if (reasonCode) {
+                    const errorMap = await getErrorMappings();
+                    const customMessage = errorMap[reasonCode];
+                    if (customMessage) {
+                        return { error: customMessage };
+                    }
+                }
+                return { error: `API returned an error: ${jsonError.error.message}` };
+            }
+        } catch (e) {
+        }
+    }
+
+    const parseCsvWithQuotes = (input: string): string[][] => {
+        const rows: string[][] = [];
+        let inQuotes = false;
+        let row: string[] = [];
+        let field = '';
+        const text = input.trim();
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if (inQuotes) {
+                if (char === '"') {
+                    if (i + 1 < text.length && text[i + 1] === '"') {
+                        field += '"';
+                        i++; 
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    field += char;
+                }
+            } else {
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === ';') {
+                    row.push(field);
+                    field = '';
+                } else if (char === '\n' || char === '\r') {
+                    row.push(field);
+                    rows.push(row);
+                    row = [];
+                    field = '';
+                    if (char === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
+                        i++;
+                    }
+                } else {
+                    field += char;
+                }
+            }
+        }
+
+        if (field || row.length > 0) {
+            row.push(field);
+            rows.push(row);
+        }
+
+        return rows.filter(r => r.length > 1 || (r.length === 1 && r[0]));
+    };
+    
+    const allRows = parseCsvWithQuotes(csvText);
+
+    if (allRows.length < 2) {
+      return { data: [] };
+    }
+
+    const headers = allRows[0].map(h => h.trim().toLowerCase());
+    const dataRows = allRows.slice(1);
+    const records: AccessListRecord[] = [];
+
+    const columnMap = {
+        price: headers.indexOf('price'),
+        accessOrigin: headers.indexOf('access origin'),
+        accessDestination: headers.indexOf('access destination'),
+        testNumber: headers.indexOf('test number'),
+        rate: headers.indexOf('rate'),
+        currency: headers.indexOf('currency'),
+        comment: headers.indexOf('comment'),
+        message: headers.indexOf('message'),
+        limitHour: headers.indexOf('limit hour'),
+        limitDay: headers.indexOf('limit day'),
+        datetime: headers.indexOf('datetime'),
+    };
+    
+    if (columnMap.accessOrigin === -1) {
+        return { error: "CSV response is missing required column ('access origin')." };
+    }
+    
+    for (const parts of dataRows) {
+        records.push({
+            price: parts[columnMap.price!],
+            accessOrigin: parts[columnMap.accessOrigin!],
+            accessDestination: parts[columnMap.accessDestination!],
+            testNumber: parts[columnMap.testNumber!],
+            rate: parts[columnMap.rate!],
+            currency: parts[columnMap.currency!],
+            comment: parts[columnMap.comment!],
+            message: parts[columnMap.message!],
+            limitHour: parts[columnMap.limitHour!],
+            limitDay: parts[columnMap.limitDay!],
+            datetime: parts[columnMap.datetime!],
+        });
+    }
+    
+    return { data: records };
+  } catch (err) {
+    const error = err as Error;
+    console.error('Failed to fetch access list data:', error);
+    return { error: error.message || 'An unknown error occurred.' };
+  }
 }
 
 // --- Auth Actions ---

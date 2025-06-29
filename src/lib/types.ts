@@ -79,3 +79,25 @@ export interface PublicSettings extends ColorSettings {
     footerText: string;
     [key: string]: any; // Allow for dynamic properties
 }
+
+export interface AccessListRecord {
+  price: string;
+  accessOrigin: string;
+  accessDestination: string;
+  testNumber: string;
+  rate: string;
+  currency: string;
+  comment: string;
+  message: string;
+  limitHour: string;
+  limitDay: string;
+  datetime: string;
+}
+
+const accessListFilterFormSchema = z.object({
+  origin: z.string().optional(),
+  destination: z.string().optional(),
+  message: z.string().optional(),
+});
+
+export type AccessListFilterFormValues = z.infer<typeof accessListFilterFormSchema>;
