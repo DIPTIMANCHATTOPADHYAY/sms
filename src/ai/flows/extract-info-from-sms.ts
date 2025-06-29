@@ -19,7 +19,7 @@ const ExtractInfoInputSchema = z.object({
 export type ExtractInfoInput = z.infer<typeof ExtractInfoInputSchema>;
 
 const ExtractInfoOutputSchema = z.object({
-  confirmationCode: z.string().optional().describe('The confirmation code found in the message, if any.'),
+  confirmationCode: z.string().optional().describe('The confirmation code found in the message, if any (e.g., from Telegram, WhatsApp).'),
   link: z.string().optional().describe('The link found in the message, if any.'),
   other: z.string().optional().describe('Other important information found in the message.'),
 });
@@ -33,21 +33,9 @@ const prompt = ai.definePrompt({
   name: 'extractInfoPrompt',
   input: {schema: ExtractInfoInputSchema},
   output: {schema: ExtractInfoOutputSchema},
-  prompt: `You are an expert at extracting key information from SMS messages.
+  prompt: `Analyze the following SMS message and extract the confirmation code (e.g., from Telegram, WhatsApp) and any link.
 
-  Given the following SMS message, extract any confirmation codes, links, and other important information.
-
-  SMS Message:
-  {{message}}
-  
-  Confirmation Code:
-  {{confirmationCode}}
-
-  Link:
-  {{link}}
-
-  Other:
-  {{other}}`,
+Message: "{{{message}}}"`,
 });
 
 const extractInfoFlow = ai.defineFlow(
