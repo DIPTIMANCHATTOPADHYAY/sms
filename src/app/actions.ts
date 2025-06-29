@@ -403,6 +403,7 @@ export async function getAdminSettings() {
         const siteNameSetting = await Setting.findOne({ key: 'siteName' });
         const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
         const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
+        const numberListSetting = await Setting.findOne({ key: 'numberList' });
 
         const rawProxy = proxySettingsSetting ? proxySettingsSetting.value : {};
         // Ensure proxySettings is always a valid object, even if DB data is malformed
@@ -422,6 +423,7 @@ export async function getAdminSettings() {
             siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
             primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
             emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
+            numberList: numberListSetting ? numberListSetting.value : [],
         }
     } catch (error) {
         return { error: (error as Error).message };
@@ -435,6 +437,7 @@ export async function updateAdminSettings(settings: {
     siteName?: string;
     primaryColor?: string;
     emailChangeEnabled?: boolean;
+    numberList?: string[];
 }) {
     try {
         await connectDB();
@@ -483,6 +486,13 @@ export async function updateAdminSettings(settings: {
             operations.push(Setting.findOneAndUpdate(
                 { key: 'emailChangeEnabled' },
                 { value: settings.emailChangeEnabled },
+                { upsert: true, new: true }
+            ));
+        }
+        if (settings.numberList !== undefined) {
+            operations.push(Setting.findOneAndUpdate(
+                { key: 'numberList' },
+                { value: settings.numberList },
                 { upsert: true, new: true }
             ));
         }
@@ -550,4 +560,14 @@ export async function adminLogout() {
   redirect('/admin/login');
 }
 
+export async function getNumberList(): Promise<string[]> {
+    try {
+        await connectDB();
+        const numberListSetting = await Setting.findOne({ key: 'numberList' });
+        return numberListSetting?.value ?? [];
+    } catch (error) {
+        console.error('Error fetching number list:', error);
+        return [];
+    }
+}
     

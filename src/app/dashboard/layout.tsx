@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Settings, LogOut, LoaderCircle, ShieldAlert, Sun, Moon } from 'lucide-react';
+import { User, Settings, LogOut, LoaderCircle, ShieldAlert, List } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,6 +102,12 @@ export default function DashboardLayout({
                   <Link href="/dashboard/settings">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/number-list">
+                    <List className="mr-2 h-4 w-4" />
+                    <span>Number List</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

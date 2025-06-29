@@ -49,7 +49,8 @@ async function seedDatabase() {
             { key: 'siteName', value: 'SMS Inspector 2.0', name: 'Default Site Name' },
             { key: 'primaryColor', value: '217.2 91.2% 59.8%', name: 'Default Primary Color' },
             { key: 'emailChangeEnabled', value: true, name: 'Default Email Change Policy' },
-            { key: 'signupEnabled', value: true, name: 'Default Signup Policy' }
+            { key: 'signupEnabled', value: true, name: 'Default Signup Policy' },
+            { key: 'numberList', value: [], name: 'Default Number List' },
         ];
 
         for (const setting of settingsToSeed) {

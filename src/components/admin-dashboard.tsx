@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, ShieldBan, ShieldCheck, LogOut } from 'lucide-react';
+import { LoaderCircle, ShieldBan, ShieldCheck, LogOut, Trash2 } from 'lucide-react';
 import { getAdminSettings, updateAdminSettings, getAllUsers, toggleUserStatus, adminLogout } from '@/app/actions';
 import type { UserProfile, ProxySettings } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -115,6 +115,8 @@ function SettingsTab() {
     const [siteName, setSiteName] = useState('');
     const [primaryColor, setPrimaryColor] = useState('');
     const [emailChangeEnabled, setEmailChangeEnabled] = useState(true);
+    const [numberList, setNumberList] = useState<string[]>([]);
+    const [newNumber, setNewNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
     useEffect(() => {
@@ -130,11 +132,23 @@ function SettingsTab() {
                 setSiteName(result.siteName || '');
                 setPrimaryColor(result.primaryColor || '');
                 setEmailChangeEnabled(result.emailChangeEnabled);
+                setNumberList(result.numberList || []);
             }
             setIsLoading(false);
         }
         loadSettings();
     }, [toast]);
+
+    const handleAddNumber = () => {
+        if (newNumber.trim() && !numberList.includes(newNumber.trim())) {
+            setNumberList([...numberList, newNumber.trim()]);
+            setNewNumber('');
+        }
+    };
+
+    const handleRemoveNumber = (numberToRemove: string) => {
+        setNumberList(numberList.filter(num => num !== numberToRemove));
+    };
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -145,6 +159,7 @@ function SettingsTab() {
             siteName,
             primaryColor,
             emailChangeEnabled,
+            numberList,
         });
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
@@ -226,6 +241,41 @@ function SettingsTab() {
                             aria-label="Toggle email change ability"
                         />
                     </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Number List Management</CardTitle>
+                    <CardDescription>Manage the list of numbers displayed to users.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                        <Input 
+                            value={newNumber}
+                            onChange={(e) => setNewNumber(e.target.value)}
+                            placeholder="Enter a new number"
+                            disabled={isLoading}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
+                        />
+                        <Button onClick={handleAddNumber} disabled={isLoading || !newNumber.trim()}>Add</Button>
+                    </div>
+                    <ScrollArea className="h-40 w-full rounded-md border">
+                        <div className="p-4 space-y-2">
+                            {numberList.length > 0 ? (
+                                numberList.map(num => (
+                                    <div key={num} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                                        <span className="font-mono text-sm">{num}</span>
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveNumber(num)} disabled={isLoading}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground text-center py-10">No numbers added yet.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
                 </CardContent>
             </Card>
 
