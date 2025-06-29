@@ -288,7 +288,7 @@ function extractInfoWithoutAI(message: string): ExtractedInfo {
 }
 
 export async function fetchAccessListData(
-  filter: AccessListFilterFormValues
+  formValues: AccessListFilterFormValues
 ): Promise<{ data?: AccessListRecord[]; error?: string }> {
   const apiKey = await getApiKey();
 
@@ -306,13 +306,13 @@ export async function fetchAccessListData(
     params: {
       filter: {
         cur_key: 1,
-        destination: filter.destination,
-        message: filter.message,
-        origin: filter.origin,
+        destination: formValues.destination,
+        message: formValues.message,
+        origin: formValues.origin,
         sp_key_list: null
       },
       page: 1,
-      per_page: filter.per_page || 10,
+      per_page: formValues.per_page || 10,
     },
   };
 
