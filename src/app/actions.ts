@@ -143,12 +143,65 @@ export async function fetchSmsData(
         }
     }
 
-    const lines = csvText.trim().split(/\r?\n/);
-    if (lines.length < 2) {
+    // A robust CSV parser that handles newlines and semicolons inside message content.
+    const parseCsvWithQuotes = (input: string): string[][] => {
+        const rows: string[][] = [];
+        let inQuotes = false;
+        let row: string[] = [];
+        let field = '';
+        const text = input.trim();
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+
+            if (inQuotes) {
+                if (char === '"') {
+                    if (i + 1 < text.length && text[i + 1] === '"') {
+                        field += '"';
+                        i++; // Skip the next quote (escaped quote)
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    field += char;
+                }
+            } else {
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === ';') {
+                    row.push(field);
+                    field = '';
+                } else if (char === '\n' || char === '\r') {
+                    row.push(field);
+                    rows.push(row);
+                    row = [];
+                    field = '';
+                    if (char === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
+                        i++; // Handle CRLF
+                    }
+                } else {
+                    field += char;
+                }
+            }
+        }
+
+        // Add the last field and row if the file doesn't end with a newline
+        if (field || row.length > 0) {
+            row.push(field);
+            rows.push(row);
+        }
+
+        return rows.filter(r => r.length > 1 || (r.length === 1 && r[0]));
+    };
+    
+    const allRows = parseCsvWithQuotes(csvText);
+
+    if (allRows.length < 2) {
       return { data: [] };
     }
 
-    const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
+    const headers = allRows[0].map(h => h.trim().toLowerCase());
+    const dataRows = allRows.slice(1);
     const records: SmsRecord[] = [];
 
     const columnMap: { [key in keyof Omit<SmsRecord, 'extractedInfo'>]?: number } = {
@@ -167,42 +220,23 @@ export async function fetchSmsData(
         return { error: "CSV response is missing required columns ('datetime', 'message')." };
     }
     
-    const messageColIndex = columnMap.message;
-
-    for (let i = 1; i < lines.length; i++) {
-        if (!lines[i]) continue; // Skip empty lines
-
-        const parts = lines[i].split(';');
-        
-        // A row must have at least enough columns to contain the message field.
-        if (parts.length <= messageColIndex) {
-            continue;
+    for (const parts of dataRows) {
+        if (parts.length <= columnMap.message!) {
+            continue; // Skip malformed rows
         }
 
-        const cleanValue = (val: string) => {
-            if (typeof val !== 'string') return '';
-            const trimmedVal = val.trim();
-            if (trimmedVal.startsWith('"') && trimmedVal.endsWith('"')) {
-                return trimmedVal.substring(1, trimmedVal.length - 1);
-            }
-            return trimmedVal;
-        };
-
-        const cleanedParts = parts.map(cleanValue);
-
-        // Reconstruct the message from the message column index onwards
-        const message = cleanedParts.slice(messageColIndex).join(';');
+        const message = parts[columnMap.message!];
         const extractedInfo = extractInfoWithoutAI(message);
 
         records.push({
-            dateTime: cleanedParts[columnMap.dateTime!],
-            senderId: cleanedParts[columnMap.senderId!],
-            phone: cleanedParts[columnMap.phone!],
-            mccMnc: cleanedParts[columnMap.mccMnc!],
-            destination: cleanedParts[columnMap.destination!],
-            range: cleanedParts[columnMap.range!],
-            rate: cleanedParts[columnMap.rate!],
-            currency: cleanedParts[columnMap.currency!],
+            dateTime: parts[columnMap.dateTime!],
+            senderId: parts[columnMap.senderId!],
+            phone: parts[columnMap.phone!],
+            mccMnc: parts[columnMap.mccMnc!],
+            destination: parts[columnMap.destination!],
+            range: parts[columnMap.range!],
+            rate: parts[columnMap.rate!],
+            currency: parts[columnMap.currency!],
             message: message,
             extractedInfo,
         });
@@ -617,7 +651,7 @@ export async function toggleUserAddNumberPermission(id: string, canAddNumbers: b
         if (!updatedUser) {
             return { error: 'User not found.' };
         }
-        return { success: true };
+        return { success: true, user: updatedUser };
     } catch (error) {
         return { error: (error as Error).message };
     }
