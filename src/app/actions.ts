@@ -550,11 +550,33 @@ export async function getAdminSettings(): Promise<Partial<AdminSettings> & { err
             emailChangeEnabled: settingsMap.emailChangeEnabled ?? true,
             numberList: settingsMap.numberList ?? [],
             errorMappings: settingsMap.errorMappings ?? [],
+            
+            // Color settings with defaults
+            colorPrimary: settingsMap.colorPrimary ?? '217.2 91.2% 59.8%',
+            colorPrimaryForeground: settingsMap.colorPrimaryForeground ?? '210 20% 98%',
+            colorBackground: settingsMap.colorBackground ?? '0 0% 100%',
+            colorForeground: settingsMap.colorForeground ?? '224 71.4% 4.1%',
+            colorCard: settingsMap.colorCard ?? '0 0% 100%',
+            colorCardForeground: settingsMap.colorCardForeground ?? '224 71.4% 4.1%',
+            colorPopover: settingsMap.colorPopover ?? '0 0% 100%',
+            colorPopoverForeground: settingsMap.colorPopoverForeground ?? '224 71.4% 4.1%',
+            colorSecondary: settingsMap.colorSecondary ?? '215 27.9% 95.1%',
+            colorSecondaryForeground: settingsMap.colorSecondaryForeground ?? '224 71.4% 4.1%',
+            colorMuted: settingsMap.colorMuted ?? '215 27.9% 95.1%',
+            colorMutedForeground: settingsMap.colorMutedForeground ?? '215 20.2% 65.1%',
+            colorAccent: settingsMap.colorAccent ?? '215 27.9% 95.1%',
+            colorAccentForeground: settingsMap.colorAccentForeground ?? '224 71.4% 4.1%',
+            colorDestructive: settingsMap.colorDestructive ?? '0 84.2% 60.2%',
+            colorDestructiveForeground: settingsMap.colorDestructiveForeground ?? '210 20% 98%',
+            colorBorder: settingsMap.colorBorder ?? '215 20.2% 90.1%',
+            colorInput: settingsMap.colorInput ?? '215 20.2% 90.1%',
+            colorRing: settingsMap.colorRing ?? '217.2 91.2% 59.8%',
+            colorSidebarBackground: settingsMap.colorSidebarBackground ?? '224 71.4% 4.1%',
+            colorSidebarForeground: settingsMap.colorSidebarForeground ?? '210 20% 98%',
+            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '217.2 32.6% 17.5%',
+            colorSidebarAccentForeground: settingsMap.colorSidebarAccentForeground ?? '210 20% 98%',
+            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '217.2 32.6% 17.5%',
         };
-        
-        for (const key of allColorKeys) {
-            allSettings[key] = settingsMap[key]
-        }
 
         return allSettings
 
