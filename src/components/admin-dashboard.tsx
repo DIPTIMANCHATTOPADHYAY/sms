@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 
 function UserManagementTab() {
@@ -122,6 +132,7 @@ function NumberManagementTab() {
     const [bulkNumbers, setBulkNumbers] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     useEffect(() => {
         async function loadNumbers() {
@@ -159,6 +170,12 @@ function NumberManagementTab() {
              toast({ variant: 'destructive', title: 'No new numbers to add', description: 'All numbers are either empty or already in the list.' });
         }
     };
+
+    const handleRemoveAll = () => {
+        setNumberList([]);
+        setIsAlertOpen(false);
+        toast({ title: 'All Numbers Cleared', description: 'Click "Save Number List" to apply this change.' });
+    };
     
     const handleSave = async () => {
         setIsLoading(true);
@@ -181,10 +198,45 @@ function NumberManagementTab() {
 
     return (
         <div className="space-y-6">
-             <Card>
+            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will remove all {numberList.length} numbers from the list. You will still need to save this change.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleRemoveAll}
+                            className={buttonVariants({ variant: 'destructive' })}
+                        >
+                            Yes, Remove All
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <Card>
                 <CardHeader>
-                    <CardTitle>Current Number List</CardTitle>
-                    <CardDescription>Manage the list of numbers displayed to users. There are currently {numberList.length} numbers.</CardDescription>
+                     <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Current Number List</CardTitle>
+                            <CardDescription>Manage the list of numbers displayed to users. There are currently {numberList.length} numbers.</CardDescription>
+                        </div>
+                        {numberList.length > 0 && (
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setIsAlertOpen(true)}
+                                disabled={isLoading}
+                                className="ml-4"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove All
+                            </Button>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <ScrollArea className="h-60 w-full rounded-md border">
