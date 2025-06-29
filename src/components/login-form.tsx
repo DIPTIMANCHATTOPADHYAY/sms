@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { login } from '@/app/actions';
 import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
+  captcha: z.string().min(1, { message: 'Please answer the security question.' }),
 });
 
 export function LoginForm() {
@@ -23,23 +24,47 @@ export function LoginForm() {
   const { toast } = useToast();
   const { refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [num1, setNum1] = useState(0);
+  const [num2, setNum2] = useState(0);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
+      captcha: '',
     },
   });
   
+  useEffect(() => {
+    // Generate random numbers on client side to avoid hydration mismatch
+    setNum1(Math.floor(Math.random() * 10));
+    setNum2(Math.floor(Math.random() * 10));
+  }, []);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (parseInt(values.captcha, 10) !== num1 + num2) {
+      form.setError('captcha', {
+        type: 'manual',
+        message: 'Incorrect answer. Please try again.',
+      });
+      setNum1(Math.floor(Math.random() * 10));
+      setNum2(Math.floor(Math.random() * 10));
+      form.setValue('captcha', '');
+      return;
+    }
+
     setIsLoading(true);
     router.prefetch('/dashboard');
-    const result = await login(values);
+    const { captcha, ...loginValues } = values;
+    const result = await login(loginValues);
     
     if (result.error) {
       setIsLoading(false);
       toast({ variant: 'destructive', title: 'Login Failed', description: result.error });
+      setNum1(Math.floor(Math.random() * 10));
+      setNum2(Math.floor(Math.random() * 10));
+      form.setValue('captcha', '');
     } else if (result.success) {
       toast({ title: 'Login Successful' });
       router.push('/dashboard');
@@ -72,6 +97,28 @@ export function LoginForm() {
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="captcha"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <FormLabel className="flex-shrink-0">
+                  What is {num1} + {num2} = ?
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Answer"
+                    autoComplete="off"
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}
