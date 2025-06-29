@@ -656,7 +656,7 @@ export async function toggleUserAddNumberPermission(id: string, canAddNumbers: b
         if (!updatedUser) {
             return { error: 'User not found.' };
         }
-        return { success: true, user: updatedUser };
+        return { success: true };
     } catch (error) {
         return { error: (error as Error).message };
     }
