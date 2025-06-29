@@ -715,15 +715,19 @@ export async function addPrivateNumbersToUser(userId: string, numbers: string): 
         if (numbersToAdd.length === 0) {
             return { error: 'Please provide at least one number.' };
         }
+        
+        if (!user.privateNumberList) {
+            user.privateNumberList = [];
+        }
 
-        const currentPrivateListSet = new Set(user.privateNumberList || []);
+        const currentPrivateListSet = new Set(user.privateNumberList);
         const uniqueNewNumbers = [...new Set(numbersToAdd)].filter(num => !currentPrivateListSet.has(num));
 
         if (uniqueNewNumbers.length === 0) {
             return { error: 'All provided numbers are already in the private list for this user.' };
         }
 
-        user.privateNumberList = [...(user.privateNumberList || []), ...uniqueNewNumbers];
+        uniqueNewNumbers.forEach(num => user.privateNumberList.push(num));
         await user.save();
 
         return { success: true, addedCount: uniqueNewNumbers.length, newList: user.privateNumberList };
