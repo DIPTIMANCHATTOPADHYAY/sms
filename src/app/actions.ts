@@ -166,14 +166,19 @@ export async function fetchSmsData(
     if (columnMap.dateTime === -1 || columnMap.message === -1) {
         return { error: "CSV response is missing required columns ('datetime', 'message')." };
     }
+    
+    const messageColIndex = columnMap.message;
 
     for (let i = 1; i < lines.length; i++) {
         if (!lines[i]) continue; // Skip empty lines
 
-        // Regex to split by semicolon, but robustly ignore semicolons inside double quotes
-        const values = lines[i].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        const parts = lines[i].split(';');
         
-        // Helper to unquote and trim a single value
+        // A row must have at least enough columns to contain the message field.
+        if (parts.length <= messageColIndex) {
+            continue;
+        }
+
         const cleanValue = (val: string) => {
             if (typeof val !== 'string') return '';
             const trimmedVal = val.trim();
@@ -181,27 +186,26 @@ export async function fetchSmsData(
                 return trimmedVal.substring(1, trimmedVal.length - 1);
             }
             return trimmedVal;
-        }
+        };
 
-        if (values.length >= headers.length) {
-            const cleanedValues = values.map(cleanValue);
+        const cleanedParts = parts.map(cleanValue);
 
-            const message = cleanedValues[columnMap.message!] ?? '';
-            const extractedInfo = extractInfoWithoutAI(message);
-            
-            records.push({
-                dateTime: cleanedValues[columnMap.dateTime!],
-                senderId: cleanedValues[columnMap.senderId!],
-                phone: cleanedValues[columnMap.phone!],
-                mccMnc: cleanedValues[columnMap.mccMnc!],
-                destination: cleanedValues[columnMap.destination!],
-                range: cleanedValues[columnMap.range!],
-                rate: cleanedValues[columnMap.rate!],
-                currency: cleanedValues[columnMap.currency!],
-                message: message,
-                extractedInfo,
-            });
-        }
+        // Reconstruct the message from the message column index onwards
+        const message = cleanedParts.slice(messageColIndex).join(';');
+        const extractedInfo = extractInfoWithoutAI(message);
+
+        records.push({
+            dateTime: cleanedParts[columnMap.dateTime!],
+            senderId: cleanedParts[columnMap.senderId!],
+            phone: cleanedParts[columnMap.phone!],
+            mccMnc: cleanedParts[columnMap.mccMnc!],
+            destination: cleanedParts[columnMap.destination!],
+            range: cleanedParts[columnMap.range!],
+            rate: cleanedParts[columnMap.rate!],
+            currency: cleanedParts[columnMap.currency!],
+            message: message,
+            extractedInfo,
+        });
     }
     
     return { data: records };
