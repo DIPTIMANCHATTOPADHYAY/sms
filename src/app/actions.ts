@@ -639,7 +639,7 @@ export async function getNumberList(): Promise<string[]> {
     }
 }
     
-export async function addNumberToList(number: string): Promise<{ success?: boolean, error?: string, newList?: string[] }> {
+export async function addNumbersToList(numbers: string): Promise<{ success?: boolean; error?: string; newList?: string[]; addedCount?: number }> {
     try {
         const user = await getCurrentUser();
         if (!user?.canAddNumbers) {
@@ -647,19 +647,27 @@ export async function addNumberToList(number: string): Promise<{ success?: boole
         }
 
         await connectDB();
+        
+        const numbersToAdd = numbers
+            .split('\n')
+            .map(n => n.trim())
+            .filter(n => n); // Filter out empty strings
+
+        if (numbersToAdd.length === 0) {
+            return { error: 'Please provide at least one number.' };
+        }
+
         const numberListSetting = await Setting.findOne({ key: 'numberList' });
         const currentList: string[] = numberListSetting?.value ?? [];
-        
-        const trimmedNumber = number.trim();
-        if (!trimmedNumber) {
-            return { error: 'Number cannot be empty.' };
+        const currentListSet = new Set(currentList);
+
+        const uniqueNewNumbers = [...new Set(numbersToAdd)].filter(num => !currentListSet.has(num));
+
+        if (uniqueNewNumbers.length === 0) {
+            return { error: 'All provided numbers are already in the list.' };
         }
 
-        if (currentList.includes(trimmedNumber)) {
-            return { error: 'This number is already in the list.' };
-        }
-
-        const newList = [...currentList, trimmedNumber];
+        const newList = [...currentList, ...uniqueNewNumbers];
 
         await Setting.findOneAndUpdate(
             { key: 'numberList' },
@@ -667,7 +675,7 @@ export async function addNumberToList(number: string): Promise<{ success?: boole
             { upsert: true, new: true }
         );
 
-        return { success: true, newList };
+        return { success: true, newList, addedCount: uniqueNewNumbers.length };
     } catch (error) {
         return { error: (error as Error).message };
     }

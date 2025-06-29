@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getNumberList, addNumberToList } from "@/app/actions";
+import { getNumberList, addNumbersToList } from "@/app/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { List, Copy, Check, LoaderCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function NumberListPage() {
     const { toast } = useToast();
@@ -17,7 +17,7 @@ export default function NumberListPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
-    const [newNumber, setNewNumber] = useState('');
+    const [bulkNumbers, setBulkNumbers] = useState('');
 
 
     useEffect(() => {
@@ -49,18 +49,18 @@ export default function NumberListPage() {
         }
     };
     
-    const handleAddNumber = async () => {
-        if (!newNumber.trim()) return;
+    const handleAddNumbers = async () => {
+        if (!bulkNumbers.trim()) return;
         setIsAdding(true);
-        const result = await addNumberToList(newNumber.trim());
+        const result = await addNumbersToList(bulkNumbers.trim());
         setIsAdding(false);
 
         if (result.error) {
-            toast({ variant: 'destructive', title: 'Failed to add number', description: result.error });
+            toast({ variant: 'destructive', title: 'Failed to add numbers', description: result.error });
         } else if (result.success && result.newList) {
-            toast({ title: 'Number Added!' });
+            toast({ title: 'Numbers Added!', description: `${result.addedCount} new numbers were added.` });
             setNumbers(result.newList);
-            setNewNumber('');
+            setBulkNumbers('');
         }
     };
 
@@ -76,21 +76,21 @@ export default function NumberListPage() {
             {user?.canAddNumbers && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Add a Number</CardTitle>
-                        <CardDescription>Add a new number to the global list.</CardDescription>
+                        <CardTitle>Bulk Add Numbers</CardTitle>
+                        <CardDescription>Paste a list of numbers, one per line, to add them to the global list.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex gap-2">
-                            <Input
-                                value={newNumber}
-                                onChange={(e) => setNewNumber(e.target.value)}
-                                placeholder="Enter a new number"
+                        <div className="flex flex-col gap-2">
+                            <Textarea
+                                value={bulkNumbers}
+                                onChange={(e) => setBulkNumbers(e.target.value)}
+                                placeholder="Paste numbers here, one per line..."
                                 disabled={isAdding}
-                                onKeyDown={(e) => e.key === 'Enter' && handleAddNumber()}
+                                className="h-40"
                             />
-                            <Button onClick={handleAddNumber} disabled={isAdding || !newNumber.trim()}>
+                            <Button onClick={handleAddNumbers} disabled={isAdding || !bulkNumbers.trim()} className="self-end">
                                 {isAdding && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                                Add Number
+                                Add Numbers
                             </Button>
                         </div>
                     </CardContent>
