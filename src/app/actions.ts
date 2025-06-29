@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
-import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings } from '@/lib/types';
+import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings, ExtractedInfo } from '@/lib/types';
 import { redirect } from 'next/navigation';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
@@ -151,7 +151,7 @@ export async function fetchSmsData(
     const headers = lines[0].split(';').map(h => h.trim().toLowerCase());
     const records: SmsRecord[] = [];
 
-    const columnMap: { [key in keyof SmsRecord]?: number } = {
+    const columnMap: { [key in keyof Omit<SmsRecord, 'extractedInfo'>]?: number } = {
         dateTime: headers.indexOf('datetime'),
         senderId: headers.indexOf('senderid'),
         phone: headers.indexOf('b-number'),
@@ -174,6 +174,7 @@ export async function fetchSmsData(
             if (message && message.startsWith('"') && message.endsWith('"')) {
               message = message.substring(1, message.length - 1);
             }
+            const extractedInfo = extractInfoWithoutAI(message);
             records.push({
                 dateTime: values[columnMap.dateTime!],
                 senderId: values[columnMap.senderId!],
@@ -184,6 +185,7 @@ export async function fetchSmsData(
                 rate: values[columnMap.rate!],
                 currency: values[columnMap.currency!],
                 message: message,
+                extractedInfo,
             });
         }
     }
@@ -196,7 +198,7 @@ export async function fetchSmsData(
   }
 }
 
-function extractInfoWithoutAI(message: string): { confirmationCode?: string; link?: string } {
+function extractInfoWithoutAI(message: string): ExtractedInfo {
     // Regex for confirmation codes: looks for 4-8 consecutive digits, or a 123-456 pattern.
     const codeRegex = /\b(\d{4,8}|\d{3}-\d{3})\b/g;
     const codes = message.match(codeRegex);
@@ -208,17 +210,6 @@ function extractInfoWithoutAI(message: string): { confirmationCode?: string; lin
     const link = links ? links[0] : undefined;
     
     return { confirmationCode, link };
-}
-
-export async function analyzeMessage(message: string) {
-  try {
-    const result = extractInfoWithoutAI(message);
-    return { data: result };
-  } catch (err) {
-    const error = err as Error;
-    console.error('Failed to analyze message:', error);
-    return { error: error.message || 'An unknown error occurred during analysis.' };
-  }
 }
 
 // --- Auth Actions ---

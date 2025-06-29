@@ -1,5 +1,9 @@
-import type { extractInfo } from '@/ai/flows/extract-info-from-sms';
 import { z } from 'zod';
+
+export interface ExtractedInfo {
+  confirmationCode?: string;
+  link?: string;
+}
 
 export interface SmsRecord {
   dateTime: string;
@@ -11,6 +15,7 @@ export interface SmsRecord {
   rate: number | string;
   currency: string;
   message: string;
+  extractedInfo: ExtractedInfo;
 }
 
 const filterFormSchema = z.object({
@@ -21,9 +26,6 @@ const filterFormSchema = z.object({
 });
 
 export type FilterFormValues = z.infer<typeof filterFormSchema>;
-
-
-export type ExtractedInfo = Awaited<ReturnType<typeof extractInfo>>;
 
 export interface UserProfile {
   id: string;
