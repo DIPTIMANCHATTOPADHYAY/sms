@@ -254,7 +254,12 @@ function extractInfoWithoutAI(message: string): ExtractedInfo {
     // Regex for confirmation codes: looks for 4-8 consecutive digits, or a 123-456 pattern.
     const codeRegex = /\b(\d{4,8}|\d{3}-\d{3})\b/g;
     const codes = message.match(codeRegex);
-    const confirmationCode = codes ? codes[0] : undefined;
+    let confirmationCode = codes ? codes[0] : undefined;
+
+    if (confirmationCode) {
+        // Remove any hyphens from the found code.
+        confirmationCode = confirmationCode.replace(/-/g, '');
+    }
 
     // Regex for links: finds URLs starting with http or https.
     const linkRegex = /(https?:\/\/[^\s"']+)/g;
