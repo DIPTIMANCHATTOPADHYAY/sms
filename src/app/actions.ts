@@ -547,7 +547,7 @@ export async function login(values: z.infer<typeof loginSchema>) {
     
     cookies().set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' && process.env.FORCE_HTTP !== 'true',
       sameSite: 'strict',
       maxAge: 60 * 60 * 24, // 1 day
       path: '/',
@@ -639,7 +639,7 @@ export async function updateUserProfile(userId: string, values: z.infer<typeof u
 
         cookies().set('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'production' && process.env.FORCE_HTTP !== 'true',
             sameSite: 'strict',
             maxAge: 60 * 60 * 24, // 1 day
             path: '/',
@@ -858,7 +858,7 @@ export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
   if (values.username === 'admin' && values.password === 'admin') {
     cookies().set('admin_session', 'true', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' && process.env.FORCE_HTTP !== 'true',
       sameSite: 'strict',
       maxAge: 60 * 60, // 1 hour
       path: '/',
