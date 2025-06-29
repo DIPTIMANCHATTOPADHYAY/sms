@@ -5,7 +5,6 @@ import { createContext, useContext, ReactNode } from "react"
 // Define the shape of your settings
 interface SiteSettings {
     siteName: string;
-    primaryColor: string;
 }
 
 // Create the context with a default value

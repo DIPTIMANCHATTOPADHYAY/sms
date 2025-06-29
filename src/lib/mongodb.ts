@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User, Setting } from './models';
+import { allColorKeys } from './types';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -21,6 +22,41 @@ if (!cached) {
     cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
+const defaultSettings: { [key: string]: any } = {
+    apiKey: 'oKREnlZLQeSs_ntZ2TAV6A',
+    proxySettings: { ip: '', port: '', username: '', password: '' },
+    siteName: 'SMS Inspector 2.0',
+    emailChangeEnabled: true,
+    signupEnabled: true,
+    numberList: [],
+    errorMappings: [],
+    // Theme Colors
+    colorPrimary: '217.2 91.2% 59.8%',
+    colorPrimaryForeground: '210 20% 98%',
+    colorBackground: '0 0% 100%',
+    colorForeground: '224 71.4% 4.1%',
+    colorCard: '0 0% 100%',
+    colorCardForeground: '224 71.4% 4.1%',
+    colorPopover: '0 0% 100%',
+    colorPopoverForeground: '224 71.4% 4.1%',
+    colorSecondary: '215 27.9% 95.1%',
+    colorSecondaryForeground: '224 71.4% 4.1%',
+    colorMuted: '215 27.9% 95.1%',
+    colorMutedForeground: '215 20.2% 65.1%',
+    colorAccent: '215 27.9% 95.1%',
+    colorAccentForeground: '224 71.4% 4.1%',
+    colorDestructive: '0 84.2% 60.2%',
+    colorDestructiveForeground: '210 20% 98%',
+    colorBorder: '215 20.2% 90.1%',
+    colorInput: '215 20.2% 90.1%',
+    colorRing: '217.2 91.2% 59.8%',
+    colorSidebarBackground: '224 71.4% 4.1%',
+    colorSidebarForeground: '210 20% 98%',
+    colorSidebarAccent: '217.2 32.6% 17.5%',
+    colorSidebarAccentForeground: '210 20% 98%',
+    colorSidebarBorder: '217.2 32.6% 17.5%',
+};
+
 async function seedDatabase() {
     try {
         // Seed Admin User
@@ -40,26 +76,12 @@ async function seedDatabase() {
             console.log('Default admin user created.');
         }
         
-        const settingsToSeed = [
-            { key: 'apiKey', value: 'oKREnlZLQeSs_ntZ2TAV6A', name: 'Default API Key' },
-            { 
-              key: 'proxySettings', 
-              value: { ip: '', port: '', username: '', password: '' }, 
-              name: 'Default Proxy Settings' 
-            },
-            { key: 'siteName', value: 'SMS Inspector 2.0', name: 'Default Site Name' },
-            { key: 'primaryColor', value: '217.2 91.2% 59.8%', name: 'Default Primary Color' },
-            { key: 'emailChangeEnabled', value: true, name: 'Default Email Change Policy' },
-            { key: 'signupEnabled', value: true, name: 'Default Signup Policy' },
-            { key: 'numberList', value: [], name: 'Default Number List' },
-            { key: 'errorMappings', value: [], name: 'Custom Error Mappings' },
-        ];
-
-        for (const setting of settingsToSeed) {
-            const settingExists = await Setting.findOne({ key: setting.key });
+        // Seed all settings from defaultSettings object
+        for (const key in defaultSettings) {
+            const settingExists = await Setting.findOne({ key });
             if (!settingExists) {
-                await Setting.create({ key: setting.key, value: setting.value });
-                console.log(`${setting.name} has been set.`);
+                await Setting.create({ key, value: defaultSettings[key] });
+                console.log(`Default setting for '${key}' has been set.`);
             }
         }
     } catch (error) {

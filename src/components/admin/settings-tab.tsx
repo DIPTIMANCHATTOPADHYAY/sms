@@ -10,16 +10,12 @@ import { LoaderCircle } from 'lucide-react';
 import { getAdminSettings, updateAdminSettings } from '@/app/actions';
 import type { ProxySettings } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
-import { hslToHex, hexToHsl } from '@/lib/utils';
 
 export function SettingsTab() {
     const { toast } = useToast();
     const [apiKey, setApiKey] = useState('');
     const [proxySettings, setProxySettings] = useState<ProxySettings>({ ip: '', port: '', username: '', password: '' });
     const [signupEnabled, setSignupEnabled] = useState(true);
-    const [siteName, setSiteName] = useState('');
-    const [primaryColor, setPrimaryColor] = useState('217.2 91.2% 59.8%');
-    const [hexColor, setHexColor] = useState('#3b82f6');
     const [emailChangeEnabled, setEmailChangeEnabled] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     
@@ -32,10 +28,6 @@ export function SettingsTab() {
                 setApiKey(result.apiKey || '');
                 setProxySettings(result.proxySettings || { ip: '', port: '', username: '', password: '' });
                 setSignupEnabled(result.signupEnabled);
-                setSiteName(result.siteName || '');
-                const currentPrimaryColor = result.primaryColor || '217.2 91.2% 59.8%';
-                setPrimaryColor(currentPrimaryColor);
-                setHexColor(hslToHex(currentPrimaryColor));
                 setEmailChangeEnabled(result.emailChangeEnabled);
             }
             setIsLoading(false);
@@ -43,90 +35,24 @@ export function SettingsTab() {
         loadSettings();
     }, [toast]);
 
-    const handleHexColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newHex = e.target.value;
-        setHexColor(newHex);
-        if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(newHex)) {
-            setPrimaryColor(hexToHsl(newHex));
-        }
-    };
-
-    const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newHex = e.target.value;
-        setHexColor(newHex);
-        setPrimaryColor(hexToHsl(newHex));
-    };
-
     const handleSave = async () => {
         setIsLoading(true);
         const result = await updateAdminSettings({ 
             apiKey, 
             proxySettings, 
             signupEnabled,
-            siteName,
-            primaryColor,
             emailChangeEnabled,
         });
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
         } else {
             toast({ title: 'Settings Saved' });
-            window.location.reload();
         }
         setIsLoading(false);
     };
 
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Appearance & Branding</CardTitle>
-                    <CardDescription>Customize the look and feel of your application.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="site-name">Site Name</Label>
-                        <Input
-                            id="site-name"
-                            placeholder="Your App Name"
-                            value={siteName}
-                            onChange={(e) => setSiteName(e.target.value)}
-                            disabled={isLoading}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="primary-color-hex">Primary Color</Label>
-                        <div className="flex items-center gap-2">
-                            <div className="relative h-10 w-10 shrink-0">
-                                <Input
-                                    id="primary-color-picker"
-                                    type="color"
-                                    value={hexColor}
-                                    onChange={handleColorPickerChange}
-                                    disabled={isLoading}
-                                    className="absolute inset-0 h-full w-full cursor-pointer p-0 opacity-0"
-                                />
-                                <div
-                                    className="h-10 w-10 rounded-md border"
-                                    style={{ backgroundColor: hexColor }}
-                                    aria-hidden="true"
-                                />
-                            </div>
-                            <Input
-                                id="primary-color-hex"
-                                value={hexColor}
-                                onChange={handleHexColorChange}
-                                disabled={isLoading}
-                                className="w-28 font-mono"
-                            />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            Choose the primary theme color for the application.
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-
             <Card>
                 <CardHeader>
                     <CardTitle>User & Access Policies</CardTitle>

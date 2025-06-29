@@ -43,3 +43,36 @@ export interface ProxySettings {
   username?: string;
   password?: string;
 }
+
+export const allColorKeys = [
+  'colorPrimary', 'colorPrimaryForeground', 'colorBackground', 'colorForeground',
+  'colorCard', 'colorCardForeground', 'colorPopover', 'colorPopoverForeground',
+  'colorSecondary', 'colorSecondaryForeground', 'colorMuted', 'colorMutedForeground',
+  'colorAccent', 'colorAccentForeground', 'colorDestructive', 'colorDestructiveForeground',
+  'colorBorder', 'colorInput', 'colorRing', 'colorSidebarBackground', 'colorSidebarForeground',
+  'colorSidebarAccent', 'colorSidebarAccentForeground', 'colorSidebarBorder'
+] as const;
+
+type ColorKeysTuple = typeof allColorKeys;
+type ColorKey = ColorKeysTuple[number];
+
+export type ColorSettings = {
+  [K in ColorKey]?: string;
+}
+
+export interface AdminSettings extends ColorSettings {
+  apiKey: string;
+  proxySettings: ProxySettings;
+  signupEnabled: boolean;
+  siteName: string;
+  emailChangeEnabled: boolean;
+  numberList: string[];
+  errorMappings: { reasonCode: string, customMessage: string }[];
+}
+
+export interface PublicSettings extends ColorSettings {
+    siteName: string;
+    signupEnabled: boolean;
+    emailChangeEnabled: boolean;
+    [key: string]: any; // Allow for dynamic properties
+}

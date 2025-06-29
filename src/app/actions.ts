@@ -7,7 +7,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
-import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings, ExtractedInfo } from '@/lib/types';
+import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings, ExtractedInfo, AdminSettings, PublicSettings } from '@/lib/types';
+import { allColorKeys } from '@/lib/types';
 import { redirect } from 'next/navigation';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
@@ -452,27 +453,49 @@ export async function updateUserProfile(userId: string, values: z.infer<typeof u
 
 
 // --- Public Site Settings ---
-export async function getPublicSettings() {
+export async function getPublicSettings(): Promise<PublicSettings> {
     try {
         await connectDB();
-        const siteNameSetting = await Setting.findOne({ key: 'siteName' });
-        const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
-        const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
-        const signupEnabledSetting = await Setting.findOne({ key: 'signupEnabled' });
-        
+        const settings = await Setting.find({});
+        const settingsMap = settings.reduce((acc, setting) => {
+            acc[setting.key] = setting.value;
+            return acc;
+        }, {} as { [key: string]: any });
+
         return {
-            siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
-            primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
-            emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
-            signupEnabled: signupEnabledSetting?.value ?? true,
-        }
-    } catch (error) {
-        return { 
-            siteName: 'SMS Inspector 2.0',
-            primaryColor: '217.2 91.2% 59.8%',
-            emailChangeEnabled: true,
-            signupEnabled: true,
+            siteName: settingsMap.siteName ?? 'SMS Inspector 2.0',
+            signupEnabled: settingsMap.signupEnabled ?? true,
+            emailChangeEnabled: settingsMap.emailChangeEnabled ?? true,
+            colorPrimary: settingsMap.colorPrimary ?? '217.2 91.2% 59.8%',
+            colorBackground: settingsMap.colorBackground ?? '0 0% 100%',
+            colorForeground: settingsMap.colorForeground ?? '224 71.4% 4.1%',
+            colorCard: settingsMap.colorCard ?? '0 0% 100%',
+            colorCardForeground: settingsMap.colorCardForeground ?? '224 71.4% 4.1%',
+            colorPopover: settingsMap.colorPopover ?? '0 0% 100%',
+            colorPopoverForeground: settingsMap.colorPopoverForeground ?? '224 71.4% 4.1%',
+            colorPrimaryForeground: settingsMap.colorPrimaryForeground ?? '210 20% 98%',
+            colorSecondary: settingsMap.colorSecondary ?? '215 27.9% 95.1%',
+            colorSecondaryForeground: settingsMap.colorSecondaryForeground ?? '224 71.4% 4.1%',
+            colorMuted: settingsMap.colorMuted ?? '215 27.9% 95.1%',
+            colorMutedForeground: settingsMap.colorMutedForeground ?? '215 20.2% 65.1%',
+            colorAccent: settingsMap.colorAccent ?? '215 27.9% 95.1%',
+            colorAccentForeground: settingsMap.colorAccentForeground ?? '224 71.4% 4.1%',
+            colorDestructive: settingsMap.colorDestructive ?? '0 84.2% 60.2%',
+            colorDestructiveForeground: settingsMap.colorDestructiveForeground ?? '210 20% 98%',
+            colorBorder: settingsMap.colorBorder ?? '215 20.2% 90.1%',
+            colorInput: settingsMap.colorInput ?? '215 20.2% 90.1%',
+            colorRing: settingsMap.colorRing ?? '217.2 91.2% 59.8%',
+            colorSidebarBackground: settingsMap.colorSidebarBackground ?? '224 71.4% 4.1%',
+            colorSidebarForeground: settingsMap.colorSidebarForeground ?? '210 20% 98%',
+            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '217.2 32.6% 17.5%',
+            colorSidebarAccentForeground: settingsMap.colorSidebarAccentForeground ?? '210 20% 98%',
+            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '217.2 32.6% 17.5%',
         };
+    } catch (error) {
+        console.error("Error fetching public settings:", error);
+        // Return default values on error
+        const defaults = (await getAdminSettings()).defaults as PublicSettings;
+        return defaults;
     }
 }
 
@@ -499,117 +522,67 @@ async function testProxy(proxy: ProxySettings): Promise<boolean> {
   }
 }
 
-export async function getAdminSettings() {
+export async function getAdminSettings(): Promise<Partial<AdminSettings> & { error?: string, defaults?: any }> {
     try {
         await connectDB();
-        const apiKeySetting = await Setting.findOne({ key: 'apiKey' });
-        const proxySettingsSetting = await Setting.findOne({ key: 'proxySettings' });
-        const signupSetting = await Setting.findOne({ key: 'signupEnabled' });
-        const siteNameSetting = await Setting.findOne({ key: 'siteName' });
-        const primaryColorSetting = await Setting.findOne({ key: 'primaryColor' });
-        const emailChangeEnabledSetting = await Setting.findOne({ key: 'emailChangeEnabled' });
-        const numberListSetting = await Setting.findOne({ key: 'numberList' });
-        const errorMappingsSetting = await Setting.findOne({ key: 'errorMappings' });
+        const settings = await Setting.find({});
+        const settingsMap = settings.reduce((acc, setting) => {
+            acc[setting.key] = setting.value;
+            return acc;
+        }, {} as { [key: string]: any });
 
-        const rawProxy = proxySettingsSetting ? proxySettingsSetting.value : {};
-        // Ensure proxySettings is always a valid object, even if DB data is malformed
+        const defaultProxy = { ip: '', port: '', username: '', password: '' };
+        const rawProxy = settingsMap.proxySettings;
         const safeProxySettings = (typeof rawProxy === 'object' && rawProxy !== null && !Array.isArray(rawProxy))
             ? rawProxy
-            : {};
-        
-        return {
-            apiKey: apiKeySetting ? apiKeySetting.value : '',
+            : defaultProxy;
+
+        const allSettings: Partial<AdminSettings> = {
+            apiKey: settingsMap.apiKey ?? '',
             proxySettings: {
                 ip: safeProxySettings.ip || '',
                 port: safeProxySettings.port || '',
                 username: safeProxySettings.username || '',
                 password: safeProxySettings.password || '',
             },
-            signupEnabled: signupSetting?.value ?? true,
-            siteName: siteNameSetting?.value ?? 'SMS Inspector 2.0',
-            primaryColor: primaryColorSetting?.value ?? '217.2 91.2% 59.8%',
-            emailChangeEnabled: emailChangeEnabledSetting?.value ?? true,
-            numberList: numberListSetting ? numberListSetting.value : [],
-            errorMappings: errorMappingsSetting ? errorMappingsSetting.value : [],
+            signupEnabled: settingsMap.signupEnabled ?? true,
+            siteName: settingsMap.siteName ?? 'SMS Inspector 2.0',
+            emailChangeEnabled: settingsMap.emailChangeEnabled ?? true,
+            numberList: settingsMap.numberList ?? [],
+            errorMappings: settingsMap.errorMappings ?? [],
+        };
+        
+        for (const key of allColorKeys) {
+            allSettings[key] = settingsMap[key]
         }
+
+        return allSettings
+
     } catch (error) {
         return { error: (error as Error).message };
     }
 }
 
-export async function updateAdminSettings(settings: { 
-    apiKey?: string; 
-    proxySettings?: ProxySettings; 
-    signupEnabled?: boolean;
-    siteName?: string;
-    primaryColor?: string;
-    emailChangeEnabled?: boolean;
-    numberList?: string[];
-    errorMappings?: { reasonCode: string, customMessage: string }[];
-}) {
+export async function updateAdminSettings(settings: Partial<AdminSettings>) {
     try {
         await connectDB();
         const operations = [];
 
-        if (settings.apiKey !== undefined) {
-             operations.push(Setting.findOneAndUpdate(
-                { key: 'apiKey' },
-                { value: settings.apiKey },
-                { upsert: true, new: true }
-            ));
-        }
         if (settings.proxySettings !== undefined) {
             const isProxyValid = await testProxy(settings.proxySettings);
             if (!isProxyValid) {
                 return { error: 'Proxy test failed. Please check the details and ensure the proxy is active.' };
             }
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'proxySettings' },
-                { value: settings.proxySettings },
-                { upsert: true, new: true }
-            ));
         }
-        if (settings.signupEnabled !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'signupEnabled' },
-                { value: settings.signupEnabled },
-                { upsert: true, new: true }
-            ));
-        }
-        if (settings.siteName !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'siteName' },
-                { value: settings.siteName },
-                { upsert: true, new: true }
-            ));
-        }
-        if (settings.primaryColor !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'primaryColor' },
-                { value: settings.primaryColor },
-                { upsert: true, new: true }
-            ));
-        }
-        if (settings.emailChangeEnabled !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'emailChangeEnabled' },
-                { value: settings.emailChangeEnabled },
-                { upsert: true, new: true }
-            ));
-        }
-        if (settings.numberList !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'numberList' },
-                { value: settings.numberList },
-                { upsert: true, new: true }
-            ));
-        }
-         if (settings.errorMappings !== undefined) {
-            operations.push(Setting.findOneAndUpdate(
-                { key: 'errorMappings' },
-                { value: settings.errorMappings },
-                { upsert: true, new: true }
-            ));
+        
+        for (const [key, value] of Object.entries(settings)) {
+            if (value !== undefined) {
+                operations.push(Setting.findOneAndUpdate(
+                    { key },
+                    { value },
+                    { upsert: true, new: true }
+                ));
+            }
         }
 
         await Promise.all(operations);

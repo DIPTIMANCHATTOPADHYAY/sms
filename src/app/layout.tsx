@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import './globals.css';
 import { getPublicSettings } from './actions';
 import { SettingsProvider } from '@/contexts/settings-provider';
+import { allColorKeys } from '@/lib/types';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
@@ -19,21 +20,27 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { siteName, primaryColor } = await getPublicSettings();
+  const settings = await getPublicSettings();
   
+  const generateThemeStyles = () => {
+    let styles = ':root {';
+    for (const key of allColorKeys) {
+        const cssVarName = key.replace('color', '--').replace(/([A-Z])/g, '-$1').toLowerCase();
+        if (settings[key]) {
+            styles += `${cssVarName}: ${settings[key]};`;
+        }
+    }
+    styles += '}';
+    return styles;
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
        <head>
-        {primaryColor && (
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `:root { --primary: ${primaryColor}; }`,
-            }}
-          />
-        )}
+          <style dangerouslySetInnerHTML={{ __html: generateThemeStyles() }} />
       </head>
       <body className="antialiased">
-        <SettingsProvider value={{ siteName, primaryColor }}>
+        <SettingsProvider value={{ siteName: settings.siteName }}>
             <AuthProvider>
             {children}
             </AuthProvider>

@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, MoreVertical, LayoutGrid } from 'lucide-react';
+import { LogOut, MoreVertical, LayoutGrid, Palette } from 'lucide-react';
 import { adminLogout } from '@/app/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
@@ -17,6 +17,7 @@ import { UserManagementTab } from './admin/user-management-tab';
 import { NumberManagementTab } from './admin/number-management-tab';
 import { ErrorManagementTab } from './admin/error-management-tab';
 import { SettingsTab } from './admin/settings-tab';
+import { AppearanceTab } from './admin/appearance-tab';
 
 
 export function AdminDashboard() {
@@ -73,12 +74,16 @@ export function AdminDashboard() {
                 <Tabs defaultValue="users" className="w-full">
                     <TabsList className="h-auto flex-wrap justify-start">
                         <TabsTrigger value="users">User Management</TabsTrigger>
+                        <TabsTrigger value="appearance">Appearance</TabsTrigger>
                         <TabsTrigger value="numbers">Number Management</TabsTrigger>
                         <TabsTrigger value="errors">Custom Errors</TabsTrigger>
-                        <TabsTrigger value="settings">General Settings</TabsTrigger>
+                        <TabsTrigger value="settings">Advanced</TabsTrigger>
                     </TabsList>
                     <TabsContent value="users" className="mt-4">
                         <UserManagementTab />
+                    </TabsContent>
+                    <TabsContent value="appearance" className="mt-4">
+                        <AppearanceTab />
                     </TabsContent>
                     <TabsContent value="numbers" className="mt-4">
                         <NumberManagementTab />
