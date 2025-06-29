@@ -8,7 +8,6 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import { User, Setting } from '@/lib/models';
 import type { FilterFormValues, SmsRecord, UserProfile, ProxySettings } from '@/lib/types';
-import { extractInfo } from '@/ai/flows/extract-info-from-sms';
 import { redirect } from 'next/navigation';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
@@ -197,9 +196,24 @@ export async function fetchSmsData(
   }
 }
 
+function extractInfoWithoutAI(message: string): { confirmationCode?: string; link?: string } {
+    // Regex for confirmation codes: looks for 4-8 consecutive digits as a whole word.
+    // This is a common pattern for verification codes and helps avoid matching parts of phone numbers.
+    const codeRegex = /\b\d{4,8}\b/g;
+    const codes = message.match(codeRegex);
+    const confirmationCode = codes ? codes[0] : undefined;
+
+    // Regex for links: finds URLs starting with http or https.
+    const linkRegex = /(https?:\/\/[^\s"']+)/g;
+    const links = message.match(linkRegex);
+    const link = links ? links[0] : undefined;
+    
+    return { confirmationCode, link };
+}
+
 export async function analyzeMessage(message: string) {
   try {
-    const result = await extractInfo({ message });
+    const result = extractInfoWithoutAI(message);
     return { data: result };
   } catch (err) {
     const error = err as Error;
