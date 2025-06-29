@@ -6,9 +6,14 @@ import { Filter, Wand2, ShieldCheck, ArrowRight } from 'lucide-react';
 interface LandingPageProps {
   siteName: string;
   signupEnabled: boolean;
+  footerText: string;
 }
 
-export function LandingPage({ siteName, signupEnabled }: LandingPageProps) {
+export function LandingPage({ siteName, signupEnabled, footerText }: LandingPageProps) {
+  const processedFooterText = footerText
+    .replace('{YEAR}', new Date().getFullYear().toString())
+    .replace('{SITENAME}', siteName);
+
   return (
     <div className="flex flex-col min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
@@ -112,7 +117,7 @@ export function LandingPage({ siteName, signupEnabled }: LandingPageProps) {
 
       <footer className="border-t">
         <div className="container mx-auto px-4 md:px-6 py-6 text-center text-muted-foreground text-sm">
-          &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
+          {processedFooterText}
         </div>
       </footer>
     </div>

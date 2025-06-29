@@ -65,6 +65,7 @@ export interface AdminSettings extends ColorSettings {
   proxySettings: ProxySettings;
   signupEnabled: boolean;
   siteName: string;
+  footerText: string;
   emailChangeEnabled: boolean;
   numberList: string[];
   errorMappings: { reasonCode: string, customMessage: string }[];
@@ -74,5 +75,6 @@ export interface PublicSettings extends ColorSettings {
     siteName: string;
     signupEnabled: boolean;
     emailChangeEnabled: boolean;
+    footerText: string;
     [key: string]: any; // Allow for dynamic properties
 }

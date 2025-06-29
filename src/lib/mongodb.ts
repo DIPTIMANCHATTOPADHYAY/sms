@@ -28,6 +28,7 @@ const defaultSettings: { [key: string]: any } = {
     siteName: 'SMS Inspector 2.0',
     emailChangeEnabled: true,
     signupEnabled: true,
+    footerText: '© {YEAR} {SITENAME}. All rights reserved.',
     numberList: [],
     errorMappings: [],
     // Theme Colors
@@ -50,7 +51,7 @@ const defaultSettings: { [key: string]: any } = {
     colorBorder: '215 20.2% 90.1%',
     colorInput: '215 20.2% 90.1%',
     colorRing: '217.2 91.2% 59.8%',
-    colorSidebarBackground: '224 71.4% 4.1%',
+    colorSidebarBackground: '217.2 91.2% 59.8%',
     colorSidebarForeground: '210 20% 98%',
     colorSidebarAccent: '217.2 32.6% 17.5%',
     colorSidebarAccentForeground: '210 20% 98%',

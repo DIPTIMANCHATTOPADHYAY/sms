@@ -2,7 +2,7 @@ import { LandingPage } from '@/components/landing-page';
 import { getPublicSettings } from '@/app/actions';
 
 export default async function Home() {
-  const { siteName, signupEnabled } = await getPublicSettings();
+  const { siteName, signupEnabled, footerText } = await getPublicSettings();
   
-  return <LandingPage siteName={siteName} signupEnabled={signupEnabled} />;
+  return <LandingPage siteName={siteName} signupEnabled={signupEnabled} footerText={footerText} />;
 }

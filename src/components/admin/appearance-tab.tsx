@@ -131,6 +131,7 @@ const ColorSettingInput = ({
 export function AppearanceTab() {
     const { toast } = useToast();
     const [siteName, setSiteName] = useState('');
+    const [footerText, setFooterText] = useState('');
     const [colors, setColors] = useState<ColorSettings>({});
     const [isLoading, setIsLoading] = useState(true);
 
@@ -142,6 +143,7 @@ export function AppearanceTab() {
                 toast({ variant: 'destructive', title: 'Error fetching settings', description: result.error });
             } else {
                 setSiteName(result.siteName || '');
+                setFooterText(result.footerText || '');
                 const loadedColors: ColorSettings = {};
                 for (const key of allColorKeys) {
                     if (result[key]) {
@@ -161,7 +163,8 @@ export function AppearanceTab() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        const settingsToUpdate = { siteName, ...colors };
+        const settingsToUpdate = { siteName, footerText, ...colors };
+        
         const result = await updateAdminSettings(settingsToUpdate);
         
         if (result.error) {
@@ -178,8 +181,8 @@ export function AppearanceTab() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Branding</CardTitle>
-                    <CardDescription>Customize the name of your application.</CardDescription>
+                    <CardTitle>Branding &amp; Footer</CardTitle>
+                    <CardDescription>Customize the name and footer text of your application.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
@@ -191,6 +194,19 @@ export function AppearanceTab() {
                             onChange={(e) => setSiteName(e.target.value)}
                             disabled={isLoading}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="footer-text">Footer Text</Label>
+                        <Input
+                            id="footer-text"
+                            placeholder="e.g., © {YEAR} {SITENAME}. All rights reserved."
+                            value={footerText}
+                            onChange={(e) => setFooterText(e.target.value)}
+                            disabled={isLoading}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                            You can use placeholders: <code>{'{YEAR}'}</code> for the current year and <code>{'{SITENAME}'}</code> for the site name.
+                        </p>
                     </div>
                 </CardContent>
             </Card>
