@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User, Setting } from './models';
@@ -53,9 +54,9 @@ const defaultSettings: { [key: string]: any } = {
     colorRing: '217.2 91.2% 59.8%',
     colorSidebarBackground: '217.2 91.2% 59.8%',
     colorSidebarForeground: '210 20% 98%',
-    colorSidebarAccent: '217.2 32.6% 17.5%',
+    colorSidebarAccent: '222.1 71.1% 50.4%',
     colorSidebarAccentForeground: '210 20% 98%',
-    colorSidebarBorder: '217.2 32.6% 17.5%',
+    colorSidebarBorder: '222.1 71.1% 50.4%',
 };
 
 async function seedDatabase() {

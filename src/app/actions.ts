@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -488,9 +489,9 @@ export async function getPublicSettings(): Promise<PublicSettings> {
             colorRing: settingsMap.colorRing ?? '217.2 91.2% 59.8%',
             colorSidebarBackground: settingsMap.colorSidebarBackground ?? '217.2 91.2% 59.8%',
             colorSidebarForeground: settingsMap.colorSidebarForeground ?? '210 20% 98%',
-            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '217.2 32.6% 17.5%',
+            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '222.1 71.1% 50.4%',
             colorSidebarAccentForeground: settingsMap.colorSidebarAccentForeground ?? '210 20% 98%',
-            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '217.2 32.6% 17.5%',
+            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '222.1 71.1% 50.4%',
         };
     } catch (error) {
         console.error("Error fetching public settings:", error);
@@ -575,9 +576,9 @@ export async function getAdminSettings(): Promise<Partial<AdminSettings> & { err
             colorRing: settingsMap.colorRing ?? '217.2 91.2% 59.8%',
             colorSidebarBackground: settingsMap.colorSidebarBackground ?? '217.2 91.2% 59.8%',
             colorSidebarForeground: settingsMap.colorSidebarForeground ?? '210 20% 98%',
-            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '217.2 32.6% 17.5%',
+            colorSidebarAccent: settingsMap.colorSidebarAccent ?? '222.1 71.1% 50.4%',
             colorSidebarAccentForeground: settingsMap.colorSidebarAccentForeground ?? '210 20% 98%',
-            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '217.2 32.6% 17.5%',
+            colorSidebarBorder: settingsMap.colorSidebarBorder ?? '222.1 71.1% 50.4%',
         };
 
         return allSettings
