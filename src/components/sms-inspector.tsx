@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,32 +32,17 @@ export function SmsInspector() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    // Set default values directly in the form definition.
     defaultValues: {
-      startDate: undefined,
-      endDate: undefined,
+      startDate: startOfDay(subDays(new Date(), 1)),
+      endDate: endOfDay(new Date()),
       senderId: '',
       phone: '',
     },
   });
 
-  // Fetch initial data for the last 2 days on component mount.
-  useEffect(() => {
-    const now = new Date();
-    const yesterday = subDays(now, 1);
-    
-    const initialValues = {
-        startDate: startOfDay(yesterday),
-        endDate: endOfDay(now),
-        senderId: '',
-        phone: '',
-    };
-    
-    form.reset(initialValues);
-    onSubmit(initialValues);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // Wrap onSubmit in useCallback to stabilize the function.
+  const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setRecords([]);
     const result = await fetchSmsData(values);
@@ -83,7 +68,14 @@ export function SmsInspector() {
         });
       }
     }
-  }
+  }, [toast]);
+
+  // Fetch initial data on component mount using the form's default values.
+  useEffect(() => {
+    // We get the values from the form state, which are now correctly initialized.
+    onSubmit(form.getValues());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSubmit]); // useEffect depends on the stable onSubmit function.
 
   return (
     <div className="space-y-8">
