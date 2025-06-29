@@ -671,7 +671,7 @@ export async function adminLogin(values: z.infer<typeof adminLoginSchema>) {
 export async function adminLogout() {
   cookies().delete('admin_session');
   cookies().delete('token');
-  redirect('/admin/login');
+  redirect('/');
 }
 
 export async function getNumberList(): Promise<string[]> {
