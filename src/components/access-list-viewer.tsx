@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { fetchAccessListData } from '@/app/actions';
@@ -34,7 +34,7 @@ export function AccessListViewer() {
       origin: '',
       destination: '',
       message: '',
-      per_page: 100,
+      per_page: 10,
     },
   });
 
@@ -129,12 +129,15 @@ export function AccessListViewer() {
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
                                     <SelectItem value="100">100</SelectItem>
                                     <SelectItem value="250">250</SelectItem>
                                     <SelectItem value="500">500</SelectItem>
                                     <SelectItem value="1000">1000</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <FormDescription>Large result sets may affect performance.</FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}
