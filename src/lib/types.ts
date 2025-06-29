@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export interface ExtractedInfo {
@@ -34,7 +35,7 @@ export interface UserProfile {
   photoURL?: string | null;
   status?: 'active' | 'blocked';
   isAdmin?: boolean;
-  canAddNumbers?: boolean;
+  privateNumberList?: string[];
 }
 
 export interface ProxySettings {

@@ -1,4 +1,5 @@
 
+
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { User, Setting } from './models';
@@ -73,7 +74,6 @@ async function seedDatabase() {
                 password: hashedPassword,
                 isAdmin: true,
                 status: 'active',
-                canAddNumbers: true,
             });
             console.log('Default admin user created.');
         }

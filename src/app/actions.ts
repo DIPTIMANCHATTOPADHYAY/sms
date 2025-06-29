@@ -383,7 +383,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
             photoURL: user.photoURL,
             status: user.status,
             isAdmin: user.isAdmin,
-            canAddNumbers: user.canAddNumbers,
+            privateNumberList: user.privateNumberList,
         };
     } catch (error) {
         return null;
@@ -628,7 +628,7 @@ export async function getAllUsers(): Promise<{ users?: UserProfile[], error?: st
             photoURL: user.photoURL,
             status: user.status,
             isAdmin: user.isAdmin,
-            canAddNumbers: user.canAddNumbers,
+            privateNumberList: user.privateNumberList,
         }));
         return { users: formattedUsers };
     } catch (error) {
@@ -641,19 +641,6 @@ export async function toggleUserStatus(id: string, status: 'active' | 'blocked')
     try {
         await connectDB();
         await User.findByIdAndUpdate(id, { status });
-        return { success: true };
-    } catch (error) {
-        return { error: (error as Error).message };
-    }
-}
-
-export async function toggleUserAddNumberPermission(id: string, canAddNumbers: boolean) {
-    try {
-        await connectDB();
-        const updatedUser = await User.findByIdAndUpdate(id, { canAddNumbers: canAddNumbers }, { new: true });
-        if (!updatedUser) {
-            return { error: 'User not found.' };
-        }
         return { success: true };
     } catch (error) {
         return { error: (error as Error).message };
@@ -697,44 +684,50 @@ export async function getNumberList(): Promise<string[]> {
         return [];
     }
 }
-    
-export async function addNumbersToList(numbers: string): Promise<{ success?: boolean; error?: string; newList?: string[]; addedCount?: number }> {
+
+export async function getCombinedNumberList(): Promise<{ publicNumbers: string[]; privateNumbers: string[]; error?: string }> {
     try {
         const user = await getCurrentUser();
-        if (!user?.canAddNumbers) {
-            return { error: 'You do not have permission to add numbers.' };
+        if (!user) {
+            return { publicNumbers: [], privateNumbers: [], error: 'User not authenticated.' };
         }
+        const publicNumbers = await getNumberList();
+        return { publicNumbers, privateNumbers: user.privateNumberList || [] };
+    } catch (error) {
+        return { publicNumbers: [], privateNumbers: [], error: (error as Error).message };
+    }
+}
 
+export async function addPrivateNumbersToUser(userId: string, numbers: string): Promise<{ success?: boolean; error?: string; addedCount?: number, newList?: string[] }> {
+    try {
         await connectDB();
         
+        const user = await User.findById(userId);
+        if (!user) {
+            return { error: 'User not found.' };
+        }
+
         const numbersToAdd = numbers
             .split('\n')
             .map(n => n.trim())
-            .filter(n => n); // Filter out empty strings
+            .filter(n => n);
 
         if (numbersToAdd.length === 0) {
             return { error: 'Please provide at least one number.' };
         }
 
-        const numberListSetting = await Setting.findOne({ key: 'numberList' });
-        const currentList: string[] = numberListSetting?.value ?? [];
-        const currentListSet = new Set(currentList);
-
-        const uniqueNewNumbers = [...new Set(numbersToAdd)].filter(num => !currentListSet.has(num));
+        const currentPrivateListSet = new Set(user.privateNumberList || []);
+        const uniqueNewNumbers = [...new Set(numbersToAdd)].filter(num => !currentPrivateListSet.has(num));
 
         if (uniqueNewNumbers.length === 0) {
-            return { error: 'All provided numbers are already in the list.' };
+            return { error: 'All provided numbers are already in the private list for this user.' };
         }
 
-        const newList = [...currentList, ...uniqueNewNumbers];
+        user.privateNumberList = [...(user.privateNumberList || []), ...uniqueNewNumbers];
+        await user.save();
 
-        await Setting.findOneAndUpdate(
-            { key: 'numberList' },
-            { value: newList },
-            { upsert: true, new: true }
-        );
+        return { success: true, addedCount: uniqueNewNumbers.length, newList: user.privateNumberList };
 
-        return { success: true, newList, addedCount: uniqueNewNumbers.length };
     } catch (error) {
         return { error: (error as Error).message };
     }

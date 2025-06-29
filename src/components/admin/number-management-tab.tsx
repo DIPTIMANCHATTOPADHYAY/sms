@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react';
@@ -78,7 +79,7 @@ export function NumberManagementTab() {
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save numbers', description: result.error });
         } else {
-            toast({ title: 'Number List Saved' });
+            toast({ title: 'Public Number List Saved' });
         }
         setIsLoading(false);
     };
@@ -98,7 +99,7 @@ export function NumberManagementTab() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will remove all {numberList.length} numbers from the list. You will still need to save this change.
+                            This action cannot be undone. This will remove all {numberList.length} numbers from the public list. You will still need to save this change.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -116,8 +117,8 @@ export function NumberManagementTab() {
                 <CardHeader>
                      <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>Current Number List</CardTitle>
-                            <CardDescription>Manage the list of numbers displayed to users. There are currently {numberList.length} numbers.</CardDescription>
+                            <CardTitle>Public Number List</CardTitle>
+                            <CardDescription>Manage the list of public numbers available to all users. There are currently {numberList.length} numbers.</CardDescription>
                         </div>
                         {numberList.length > 0 && (
                             <Button
@@ -146,7 +147,7 @@ export function NumberManagementTab() {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-sm text-muted-foreground text-center py-10">No numbers added yet.</p>
+                                <p className="text-sm text-muted-foreground text-center py-10">No public numbers added yet.</p>
                             )}
                         </div>
                     </ScrollArea>
@@ -155,8 +156,8 @@ export function NumberManagementTab() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Add Single Number</CardTitle>
-                    <CardDescription>Manually add a single number to the list.</CardDescription>
+                    <CardTitle>Add Single Public Number</CardTitle>
+                    <CardDescription>Manually add a single number to the public list.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="flex gap-2">
@@ -174,8 +175,8 @@ export function NumberManagementTab() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Bulk Upload Numbers</CardTitle>
-                    <CardDescription>Paste a list of numbers, one per line, to add them all at once.</CardDescription>
+                    <CardTitle>Bulk Upload Public Numbers</CardTitle>
+                    <CardDescription>Paste a list of numbers, one per line, to add them all at once to the public list.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Textarea
@@ -192,7 +193,7 @@ export function NumberManagementTab() {
              <div className="flex justify-end">
                 <Button onClick={handleSave} disabled={isLoading} size="lg">
                     {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Number List
+                    Save Public Number List
                 </Button>
             </div>
         </div>
