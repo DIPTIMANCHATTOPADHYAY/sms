@@ -168,22 +168,36 @@ export async function fetchSmsData(
     }
 
     for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(';');
-        if (values.length >= headers.length) {
-            let message = values[columnMap.message!];
-            if (message && message.startsWith('"') && message.endsWith('"')) {
-              message = message.substring(1, message.length - 1);
+        if (!lines[i]) continue; // Skip empty lines
+
+        // Regex to split by semicolon, but robustly ignore semicolons inside double quotes
+        const values = lines[i].split(/;(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        
+        // Helper to unquote and trim a single value
+        const cleanValue = (val: string) => {
+            if (typeof val !== 'string') return '';
+            const trimmedVal = val.trim();
+            if (trimmedVal.startsWith('"') && trimmedVal.endsWith('"')) {
+                return trimmedVal.substring(1, trimmedVal.length - 1);
             }
+            return trimmedVal;
+        }
+
+        if (values.length >= headers.length) {
+            const cleanedValues = values.map(cleanValue);
+
+            const message = cleanedValues[columnMap.message!] ?? '';
             const extractedInfo = extractInfoWithoutAI(message);
+            
             records.push({
-                dateTime: values[columnMap.dateTime!],
-                senderId: values[columnMap.senderId!],
-                phone: values[columnMap.phone!],
-                mccMnc: values[columnMap.mccMnc!],
-                destination: values[columnMap.destination!],
-                range: values[columnMap.range!],
-                rate: values[columnMap.rate!],
-                currency: values[columnMap.currency!],
+                dateTime: cleanedValues[columnMap.dateTime!],
+                senderId: cleanedValues[columnMap.senderId!],
+                phone: cleanedValues[columnMap.phone!],
+                mccMnc: cleanedValues[columnMap.mccMnc!],
+                destination: cleanedValues[columnMap.destination!],
+                range: cleanedValues[columnMap.range!],
+                rate: cleanedValues[columnMap.rate!],
+                currency: cleanedValues[columnMap.currency!],
                 message: message,
                 extractedInfo,
             });
