@@ -43,7 +43,7 @@ function UserManagementTab() {
         if (result.error) {
             toast({ variant: 'destructive', title: 'Update failed', description: result.error });
         } else {
-            toast({ title: 'User status updated successfully!' });
+            toast({ title: 'User Status Updated' });
             fetchUsers();
         }
     };
@@ -164,7 +164,7 @@ function SettingsTab() {
         if (result.error) {
             toast({ variant: 'destructive', title: 'Failed to save settings', description: result.error });
         } else {
-            toast({ title: 'Settings Saved', description: 'Your changes have been saved successfully.' });
+            toast({ title: 'Settings Saved' });
             // Optionally, refresh the page to see color/name changes immediately
             window.location.reload();
         }

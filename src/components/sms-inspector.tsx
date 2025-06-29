@@ -58,13 +58,12 @@ export function SmsInspector() {
       if (result.data.length === 0) {
         toast({
           title: 'No Records Found',
-          description: 'Your query returned no SMS records.',
         });
       } else {
         setRecords(result.data);
         toast({
-          title: 'Success!',
-          description: `Fetched ${result.data.length} records.`,
+          title: 'Data Loaded',
+          description: `${result.data.length} records found.`,
         });
       }
     }
@@ -75,7 +74,7 @@ export function SmsInspector() {
     // We get the values from the form state, which are now correctly initialized.
     onSubmit(form.getValues());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSubmit]); // useEffect depends on the stable onSubmit function.
+  }, []); // useEffect depends on the stable onSubmit function.
 
   return (
     <div className="space-y-8">

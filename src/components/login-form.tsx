@@ -34,13 +34,14 @@ export function LoginForm() {
   
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    router.prefetch('/dashboard');
     const result = await login(values);
-    setIsLoading(false);
-
+    
     if (result.error) {
+      setIsLoading(false);
       toast({ variant: 'destructive', title: 'Login Failed', description: result.error });
     } else if (result.success) {
-      toast({ title: 'Login Successful', description: 'Redirecting to your dashboard...' });
+      toast({ title: 'Login Successful' });
       router.push('/dashboard');
       refreshUser(); // Update auth context in the background after navigation starts
     }

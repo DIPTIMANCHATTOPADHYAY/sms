@@ -76,7 +76,6 @@ export function MessageCell({ message }: MessageCellProps) {
       setAnalysisResult(result.data);
        toast({
         title: 'Analysis Complete',
-        description: 'Key information has been extracted.',
       });
     }
   };

@@ -43,7 +43,6 @@ export function SignupForm() {
     } else if (result.success) {
       toast({
         title: 'Account Created',
-        description: 'You can now log in with your credentials.',
       });
       router.push('/login');
     }

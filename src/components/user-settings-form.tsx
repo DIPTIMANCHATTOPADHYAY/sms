@@ -45,7 +45,7 @@ export function UserSettingsForm({ user, emailChangeEnabled }: UserSettingsFormP
     if (result.error) {
       toast({ variant: 'destructive', title: 'Update Failed', description: result.error });
     } else if (result.success) {
-      toast({ title: 'Profile Updated', description: 'Your profile has been updated successfully.' });
+      toast({ title: 'Profile Updated' });
       refreshUser();
     }
   }
