@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
 import { CalendarIcon, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -23,6 +24,24 @@ const formSchema = z.object({
   endDate: z.date({ required_error: 'An end date is required.'}),
   senderId: z.string().optional(),
   phone: z.string().optional(),
+}).superRefine(({ startDate, endDate }, ctx) => {
+    if (startDate && endDate) {
+        if (endDate < startDate) {
+            ctx.addIssue({
+                code: 'custom',
+                message: 'End date must be after start date.',
+                path: ['endDate'],
+            });
+            return;
+        }
+        if (differenceInDays(endDate, startDate) > 1) {
+            ctx.addIssue({
+                code: 'custom',
+                message: 'The date range can be a maximum of two days.',
+                path: ['endDate'],
+            });
+        }
+    }
 });
 
 interface SmsInspectorProps {

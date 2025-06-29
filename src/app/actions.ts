@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -18,6 +18,22 @@ const filterSchema = z.object({
   endDate: z.date(),
   senderId: z.string().optional(),
   phone: z.string().optional(),
+}).superRefine(({ startDate, endDate }, ctx) => {
+    if (endDate < startDate) {
+        ctx.addIssue({
+            code: 'custom',
+            message: 'End date must be after start date.',
+            path: ['endDate'],
+        });
+        return;
+    }
+    if (differenceInDays(endDate, startDate) > 1) {
+        ctx.addIssue({
+            code: 'custom',
+            message: 'The date range can be a maximum of two days.',
+            path: ['endDate'],
+        });
+    }
 });
 
 async function getApiKey(): Promise<string> {
@@ -69,7 +85,7 @@ export async function fetchSmsData(
   
   const validation = filterSchema.safeParse(filter);
   if (!validation.success) {
-    return { error: 'Invalid filter data.' };
+    return { error: validation.error.errors.map((e) => e.message).join(', ') };
   }
   
   const agent = await getProxyAgent();
@@ -364,6 +380,7 @@ export async function login(values: z.infer<typeof loginSchema>) {
 export async function logout() {
     cookies().delete('token');
     cookies().delete('admin_session');
+    redirect('/');
 }
 
 export async function getCurrentUser(): Promise<UserProfile | null> {
@@ -727,10 +744,14 @@ export async function addPrivateNumbersToUser(userId: string, numbers: string): 
             return { error: 'All provided numbers are already in the private list for this user.' };
         }
 
-        uniqueNewNumbers.forEach(num => user.privateNumberList.push(num));
-        await user.save();
+        await User.updateOne(
+            { _id: userId },
+            { $push: { privateNumberList: { $each: uniqueNewNumbers } } }
+        );
 
-        return { success: true, addedCount: uniqueNewNumbers.length, newList: user.privateNumberList };
+        const updatedUser = await User.findById(userId);
+
+        return { success: true, addedCount: uniqueNewNumbers.length, newList: updatedUser?.privateNumberList ?? [] };
 
     } catch (error) {
         return { error: (error as Error).message };
