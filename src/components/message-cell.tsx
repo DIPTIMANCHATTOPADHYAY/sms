@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Wand2, LoaderCircle } from 'lucide-react';
+import { useState, Fragment } from 'react';
+import { Wand2, LoaderCircle, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeMessage } from '@/app/actions';
@@ -11,48 +11,27 @@ interface MessageCellProps {
   message: string;
 }
 
+// This function now only highlights links. The confirmation code is handled separately.
 const renderAnalyzedMessage = (message: string, analysis: ExtractedInfo) => {
-  let result: (string | JSX.Element)[] = [message];
-  let lastIndex = 0;
+  if (!analysis.link) {
+    return message;
+  }
 
-  const processPart = (part: string | JSX.Element, term: string | undefined, className: string, isLink: boolean) => {
-    if (!term || typeof part !== 'string') return [part];
-    
-    const split = part.split(term);
-    const newResult: (string | JSX.Element)[] = [];
-    
-    split.forEach((str, i) => {
-      if (str) newResult.push(str);
-      if (i < split.length - 1) {
-        lastIndex++;
-        newResult.push(
-          isLink ? (
-            <a key={`${term}-${lastIndex}`} href={term} target="_blank" rel="noopener noreferrer" className={className}>
-              {term}
+  const parts = message.split(analysis.link);
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <a href={analysis.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              {analysis.link}
             </a>
-          ) : (
-            <strong key={`${term}-${lastIndex}`} className={className}>
-              {term}
-            </strong>
-          )
-        );
-      }
-    });
-    return newResult;
-  };
-
-  if (analysis.link) {
-    result = processPart(result[0], analysis.link, 'text-accent-foreground/80 bg-accent/30 hover:bg-accent/50 rounded-sm px-1 underline underline-offset-2', true);
-  }
-  if (analysis.confirmationCode) {
-    const tempResult: (string | JSX.Element)[] = [];
-    result.forEach(part => {
-      tempResult.push(...processPart(part, analysis.confirmationCode, 'text-primary bg-primary/20 rounded-sm px-1 font-bold', false));
-    });
-    result = tempResult;
-  }
-  
-  return result;
+          )}
+        </Fragment>
+      ))}
+    </>
+  );
 };
 
 
@@ -60,9 +39,11 @@ export function MessageCell({ message }: MessageCellProps) {
   const { toast } = useToast();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<ExtractedInfo | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
+    setAnalysisResult(null);
     const result = await analyzeMessage(message);
     setIsAnalyzing(false);
 
@@ -80,11 +61,38 @@ export function MessageCell({ message }: MessageCellProps) {
     }
   };
 
+  const handleCopyCode = (code: string) => {
+    if (!navigator.clipboard) {
+      toast({ variant: 'destructive', title: 'Copy not supported' });
+      return;
+    }
+    navigator.clipboard.writeText(code).then(() => {
+      toast({ title: 'Code Copied!' });
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      toast({ variant: 'destructive', title: 'Failed to copy' });
+    });
+  }
+
   return (
     <div className="flex items-start justify-between gap-2">
-      <p className="whitespace-pre-wrap flex-grow py-1">
-        {analysisResult ? renderAnalyzedMessage(message, analysisResult) : message}
-      </p>
+      <div className="flex-grow space-y-2 py-1">
+        <p className="whitespace-pre-wrap">
+          {analysisResult ? renderAnalyzedMessage(message, analysisResult) : message}
+        </p>
+        {analysisResult?.confirmationCode && (
+          <div 
+            onClick={() => handleCopyCode(analysisResult.confirmationCode!)}
+            className="inline-flex items-center gap-2 cursor-pointer rounded-md bg-primary/10 p-2 text-primary transition-colors hover:bg-primary/20"
+          >
+            <span className="font-mono text-sm font-bold">{analysisResult.confirmationCode}</span>
+            <span className="text-primary/80">
+              {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </span>
+          </div>
+        )}
+      </div>
       <Button
         variant="ghost"
         size="icon"
