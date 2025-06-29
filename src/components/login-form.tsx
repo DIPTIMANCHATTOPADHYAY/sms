@@ -55,7 +55,6 @@ export function LoginForm() {
     }
 
     setIsLoading(true);
-    router.prefetch('/dashboard');
     const { captcha, ...loginValues } = values;
     const result = await login(loginValues);
     
@@ -67,8 +66,8 @@ export function LoginForm() {
       form.setValue('captcha', '');
     } else if (result.success) {
       toast({ title: 'Login Successful' });
+      await refreshUser(); // Ensure auth state is updated before navigating
       router.push('/dashboard');
-      refreshUser(); // Update auth context in the background after navigation starts
     }
   }
 

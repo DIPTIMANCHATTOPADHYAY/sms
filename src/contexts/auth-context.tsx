@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [loading, setLoading] = useState(true);
 
     const fetchUser = useCallback(async () => {
-        // No need to set loading to true here, it's a refresh
+        setLoading(true);
         try {
             const currentUser = await getCurrentUser();
             setUser(currentUser);
