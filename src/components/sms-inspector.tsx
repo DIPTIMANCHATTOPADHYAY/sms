@@ -25,14 +25,19 @@ const formSchema = z.object({
   phone: z.string().optional(),
 });
 
-export function SmsInspector() {
+interface SmsInspectorProps {
+    initialRecords?: SmsRecord[];
+    initialError?: string;
+}
+
+
+export function SmsInspector({ initialRecords = [], initialError }: SmsInspectorProps) {
   const { toast } = useToast();
-  const [records, setRecords] = useState<SmsRecord[]>([]);
+  const [records, setRecords] = useState<SmsRecord[]>(initialRecords);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    // Set default values directly in the form definition.
     defaultValues: {
       startDate: startOfDay(subDays(new Date(), 1)),
       endDate: endOfDay(new Date()),
@@ -40,8 +45,19 @@ export function SmsInspector() {
       phone: '',
     },
   });
+  
+  // Show initial error if there was one during server-side fetch
+  useEffect(() => {
+    if (initialError) {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to fetch data',
+            description: initialError,
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialError]);
 
-  // Wrap onSubmit in useCallback to stabilize the function.
   const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setRecords([]);
@@ -68,14 +84,7 @@ export function SmsInspector() {
       }
     }
   }, [toast]);
-
-  // Fetch initial data on component mount using the form's default values.
-  useEffect(() => {
-    // We get the values from the form state, which are now correctly initialized.
-    onSubmit(form.getValues());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // useEffect depends on the stable onSubmit function.
-
+  
   return (
     <div className="space-y-8">
       <Form {...form}>
