@@ -32,6 +32,7 @@ export interface UserProfile {
   photoURL?: string | null;
   status?: 'active' | 'blocked';
   isAdmin?: boolean;
+  canAddNumbers?: boolean;
 }
 
 export interface ProxySettings {

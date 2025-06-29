@@ -320,6 +320,7 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
             photoURL: user.photoURL,
             status: user.status,
             isAdmin: user.isAdmin,
+            canAddNumbers: user.canAddNumbers,
         };
     } catch (error) {
         return null;
@@ -567,7 +568,8 @@ export async function getAllUsers(): Promise<{ users?: UserProfile[], error?: st
             email: user.email,
             photoURL: user.photoURL,
             status: user.status,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            canAddNumbers: user.canAddNumbers,
         }));
         return { users: formattedUsers };
     } catch (error) {
@@ -580,6 +582,16 @@ export async function toggleUserStatus(id: string, status: 'active' | 'blocked')
     try {
         await connectDB();
         await User.findByIdAndUpdate(id, { status });
+        return { success: true };
+    } catch (error) {
+        return { error: (error as Error).message };
+    }
+}
+
+export async function toggleUserAddNumberPermission(id: string, canAddNumbers: boolean) {
+    try {
+        await connectDB();
+        await User.findByIdAndUpdate(id, { canAddNumbers });
         return { success: true };
     } catch (error) {
         return { error: (error as Error).message };
@@ -624,3 +636,36 @@ export async function getNumberList(): Promise<string[]> {
     }
 }
     
+export async function addNumberToList(number: string): Promise<{ success?: boolean, error?: string, newList?: string[] }> {
+    try {
+        const user = await getCurrentUser();
+        if (!user?.canAddNumbers) {
+            return { error: 'You do not have permission to add numbers.' };
+        }
+
+        await connectDB();
+        const numberListSetting = await Setting.findOne({ key: 'numberList' });
+        const currentList: string[] = numberListSetting?.value ?? [];
+        
+        const trimmedNumber = number.trim();
+        if (!trimmedNumber) {
+            return { error: 'Number cannot be empty.' };
+        }
+
+        if (currentList.includes(trimmedNumber)) {
+            return { error: 'This number is already in the list.' };
+        }
+
+        const newList = [...currentList, trimmedNumber];
+
+        await Setting.findOneAndUpdate(
+            { key: 'numberList' },
+            { value: newList },
+            { upsert: true, new: true }
+        );
+
+        return { success: true, newList };
+    } catch (error) {
+        return { error: (error as Error).message };
+    }
+}

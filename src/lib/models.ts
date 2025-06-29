@@ -9,6 +9,7 @@ export interface IUser extends Document {
   provider?: 'google' | 'facebook' | 'credentials';
   status: 'active' | 'blocked';
   isAdmin: boolean;
+  canAddNumbers: boolean;
 }
 
 const UserSchema: Schema = new Schema({
@@ -19,6 +20,7 @@ const UserSchema: Schema = new Schema({
   provider: { type: String, default: 'credentials' },
   status: { type: String, default: 'active' },
   isAdmin: { type: Boolean, default: false },
+  canAddNumbers: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export const User: Model<IUser> = models.User || mongoose.model<IUser>('User', UserSchema);

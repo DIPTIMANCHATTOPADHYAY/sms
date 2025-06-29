@@ -35,6 +35,7 @@ async function seedDatabase() {
                 password: hashedPassword,
                 isAdmin: true,
                 status: 'active',
+                canAddNumbers: true,
             });
             console.log('Default admin user created.');
         }
