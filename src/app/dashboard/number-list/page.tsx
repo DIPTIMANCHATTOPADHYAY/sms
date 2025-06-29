@@ -12,12 +12,19 @@ import { Input } from '@/components/ui/input';
 
 export default function NumberListPage() {
     const { toast } = useToast();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [numbers, setNumbers] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [newNumber, setNewNumber] = useState('');
+
+
+    useEffect(() => {
+        // Refresh user data on component mount to ensure permissions are up-to-date
+        refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 
     useEffect(() => {

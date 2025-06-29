@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, createContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, ReactNode, useCallback } from 'react';
 import type { UserProfile } from '@/lib/types';
 import { getCurrentUser } from '@/app/actions';
 
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback(async () => {
         // No need to set loading to true here, it's a refresh
         try {
             const currentUser = await getCurrentUser();
@@ -30,11 +30,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchUser();
-    }, []);
+    }, [fetchUser]);
 
     const value = { user, loading, refreshUser: fetchUser };
 
