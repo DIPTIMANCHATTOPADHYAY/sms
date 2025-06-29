@@ -7,20 +7,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { fetchAccessListData } from '@/app/actions';
 import { AccessListTable } from '@/components/access-list-table';
 import type { AccessListRecord } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
   origin: z.string().min(1, { message: 'Sender (Origin) is required to search.' }),
   destination: z.string().optional(),
   message: z.string().optional(),
-  per_page: z.coerce.number().optional(),
 });
 
 export function AccessListViewer() {
@@ -34,7 +32,6 @@ export function AccessListViewer() {
       origin: '',
       destination: '',
       message: '',
-      per_page: 10,
     },
   });
 
@@ -76,7 +73,7 @@ export function AccessListViewer() {
                   <CardDescription>Use the filters below to search the access list. Sender (Origin) is required.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="origin"
@@ -116,32 +113,6 @@ export function AccessListViewer() {
                         </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="per_page"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Results</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} defaultValue={String(field.value)}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Results per page" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                    <SelectItem value="100">100</SelectItem>
-                                    <SelectItem value="250">250</SelectItem>
-                                    <SelectItem value="500">500</SelectItem>
-                                    <SelectItem value="1000">1000</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormDescription>Large result sets may affect performance.</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
