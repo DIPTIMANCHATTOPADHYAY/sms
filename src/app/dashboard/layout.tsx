@@ -43,8 +43,8 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await logout();
-    refreshUser(); // Update the auth context
     router.push('/login');
+    refreshUser(); // Update the auth context after navigating
   };
 
   if (loading || !user) {

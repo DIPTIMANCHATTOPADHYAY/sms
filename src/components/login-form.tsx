@@ -41,8 +41,8 @@ export function LoginForm() {
       toast({ variant: 'destructive', title: 'Login Failed', description: result.error });
     } else if (result.success) {
       toast({ title: 'Login Successful', description: 'Redirecting to your dashboard...' });
-      await refreshUser(); // Update the auth context before navigating
       router.push('/dashboard');
+      refreshUser(); // Update auth context in the background after navigation starts
     }
   }
 
