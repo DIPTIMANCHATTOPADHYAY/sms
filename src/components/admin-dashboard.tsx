@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, ShieldBan, ShieldCheck, LogOut, Trash2 } from 'lucide-react';
-import { getAdminSettings, updateAdminSettings, getAllUsers, toggleUserStatus, adminLogout } from '@/app/actions';
+import { LoaderCircle, ShieldBan, ShieldCheck, LogOut, Trash2, MoreVertical, LayoutGrid } from 'lucide-react';
+import { getAdminSettings, updateAdminSettings, getAllUsers, toggleUserStatus, adminLogout, getNumberList } from '@/app/actions';
 import type { UserProfile, ProxySettings } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,6 +16,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from './ui/textarea';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 
 
 function UserManagementTab() {
@@ -119,12 +126,8 @@ function NumberManagementTab() {
     useEffect(() => {
         async function loadNumbers() {
             setIsFetching(true);
-            const result = await getAdminSettings();
-            if (result.error) {
-                 toast({ variant: 'destructive', title: 'Error fetching numbers', description: result.error });
-            } else {
-                setNumberList(result.numberList || []);
-            }
+            const result = await getNumberList();
+            setNumberList(result || []);
             setIsFetching(false);
         }
         loadNumbers();
@@ -448,15 +451,20 @@ function SettingsTab() {
 
 
 export function AdminDashboard() {
+    const logoutFormRef = useRef<HTMLFormElement>(null);
+
     return (
         <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8">
+            <form ref={logoutFormRef} action={adminLogout} className="hidden" />
             <div className="max-w-7xl mx-auto">
-                <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="mb-6 flex flex-row justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                         <p className="text-muted-foreground">Welcome to the control center.</p>
                     </div>
-                     <div className="flex w-full flex-wrap justify-start gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+
+                     {/* Desktop Buttons */}
+                     <div className="hidden sm:flex items-center gap-2">
                         <form action={adminLogout}>
                             <Button variant="outline" type="submit">
                                 <LogOut className="mr-2 h-4 w-4" />
@@ -467,9 +475,34 @@ export function AdminDashboard() {
                             <Button>Back to App</Button>
                         </Link>
                     </div>
+
+                    {/* Mobile Dropdown */}
+                    <div className="sm:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <MoreVertical className="h-5 w-5" />
+                                    <span className="sr-only">Open menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href="/dashboard" className="flex items-center w-full">
+                                        <LayoutGrid className="mr-2 h-4 w-4" />
+                                        <span>Back to App</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                 <DropdownMenuItem onClick={() => logoutFormRef.current?.requestSubmit()}>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Admin Logout</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
                 <Tabs defaultValue="users" className="w-full">
-                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 max-w-lg">
+                    <TabsList className="h-auto flex-wrap justify-start">
                         <TabsTrigger value="users">User Management</TabsTrigger>
                         <TabsTrigger value="numbers">Number Management</TabsTrigger>
                         <TabsTrigger value="settings">General Settings</TabsTrigger>
